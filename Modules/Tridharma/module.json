@@ -1,0 +1,11 @@
+{
+    "name": "Tridharma",
+    "alias": "tridharma",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Tridharma\\Providers\\TridharmaServiceProvider"
+    ],
+    "files": []
+}

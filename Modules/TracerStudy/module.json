@@ -1,0 +1,11 @@
+{
+    "name": "TracerStudy",
+    "alias": "tracerstudy",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\TracerStudy\\Providers\\TracerStudyServiceProvider"
+    ],
+    "files": []
+}

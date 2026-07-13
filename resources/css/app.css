@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@plugin '@tailwindcss/forms';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    
+    --color-primary: var(--primary-color, #4e73df);
+    --color-primary-dark: #3e5fc7;
+    --color-sidebar: #0f172a;
+    
+    /* Extended color palette */
+    --color-success: #10b981;
+    --color-danger: #ef4444;
+    --color-warning: #f59e0b;
+    --color-info: #3b82f6;
+}
+
+@utility glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@utility glass-dark {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@utility sidebar-link-active {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 15%, transparent), transparent);
+    border-left: 3px solid var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Alpine.js cloak */
+[x-cloak] {
+    display: none !important;
+}

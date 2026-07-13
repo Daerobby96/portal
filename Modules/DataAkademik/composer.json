@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/dataakademik",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\DataAkademik\\": "app/",
+            "Modules\\DataAkademik\\Database\\Factories\\": "database/factories/",
+            "Modules\\DataAkademik\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\DataAkademik\\Tests\\": "tests/"
+        }
+    }
+}

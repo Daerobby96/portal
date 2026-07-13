@@ -1,0 +1,146 @@
+<?php
+namespace Modules\Spmi\Http\Controllers;
+use App\Http\Controllers\Controller;
+
+use Modules\Spmi\Models\Evaluasi;
+use Modules\Spmi\Models\Monitoring;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class EvaluasiController extends Controller
+{
+    public function index(Request $request)
+    {
+        $periodeSel = \Modules\DataMaster\Models\Periode::find($request->periode_id) ?? \Modules\DataMaster\Models\Periode::aktif();
+        
+        $query = Monitoring::where('periode_id', $periodeSel?->id)
+                            ->with(['indikator.standar', 'evaluasi', 'pelapor'])
+                            ->whereIn('status', ['submitted', 'verified'])
+                            ->latest();
+
+        if ($request->filled('hasil')) {
+            $query->whereHas('evaluasi', fn($q) => $q->where('hasil', $request->hasil));
+        }
+
+        $monitorings = $query->get();
+        $periodes    = \Modules\DataMaster\Models\Periode::orderByDesc('tahun')->get();
+
+        $stats = [
+            'tercapai'        => $monitorings->filter(fn($m) => $m->evaluasi && $m->evaluasi->hasil === 'tercapai')->count(),
+            'tidak_tercapai'  => $monitorings->filter(fn($m) => $m->evaluasi && $m->evaluasi->hasil === 'tidak_tercapai')->count(),
+            'perlu_perhatian' => $monitorings->filter(fn($m) => $m->evaluasi && $m->evaluasi->hasil === 'perlu_perhatian')->count(),
+            'belum_eval'      => $monitorings->filter(fn($m) => !$m->evaluasi)->count(),
+        ];
+
+        return view('spmi::evaluasi.index', compact('monitorings', 'stats', 'periodes', 'periodeSel'));
+    }
+
+    public function create(Request $request)
+    {
+        $monitorings = Monitoring::with(['indikator', 'periode'])
+            ->doesntHave('evaluasi')
+            ->where('status', 'submitted')
+            ->orderBy('tanggal_input', 'desc')
+            ->get();
+
+        $selected = $request->filled('monitoring_id')
+            ? Monitoring::with('indikator')->find($request->monitoring_id)
+            : null;
+
+        return view('spmi::evaluasi.create', compact('monitorings', 'selected'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'monitoring_id'   => 'required|exists:monitorings,id',
+            'analisa'         => 'required|string',
+            'rekomendasi'     => 'nullable|string',
+            'hasil'           => 'required|in:tercapai,tidak_tercapai,perlu_perhatian',
+            'tanggal_evaluasi'=> 'required|date',
+        ]);
+
+        if (Evaluasi::where('monitoring_id', $request->monitoring_id)->exists()) {
+            return back()->with('error', 'Monitoring ini sudah memiliki evaluasi.');
+        }
+
+        Evaluasi::create([
+            'monitoring_id'    => $request->monitoring_id,
+            'evaluator_id'     => Auth::id(),
+            'analisa'          => $request->analisa,
+            'rekomendasi'      => $request->rekomendasi,
+            'hasil'            => $request->hasil,
+            'tanggal_evaluasi' => $request->tanggal_evaluasi,
+        ]);
+
+        Monitoring::find($request->monitoring_id)->update(['status' => 'verified']);
+
+        return redirect()->route('evaluasi.index')
+            ->with('success', 'Evaluasi berhasil disimpan.');
+    }
+
+    public function show(Evaluasi $evaluasi)
+    {
+        $evaluasi->load(['monitoring.indikator.standar', 'monitoring.periode', 'evaluator']);
+        return view('spmi::evaluasi.show', compact('evaluasi'));
+    }
+
+    public function edit(Evaluasi $evaluasi)
+    {
+        $evaluasi->load('monitoring.indikator');
+        return view('spmi::evaluasi.edit', compact('evaluasi'));
+    }
+
+    public function update(Request $request, Evaluasi $evaluasi)
+    {
+        $request->validate([
+            'analisa'          => 'required|string',
+            'rekomendasi'      => 'nullable|string',
+            'hasil'            => 'required|in:tercapai,tidak_tercapai,perlu_perhatian',
+            'tanggal_evaluasi' => 'required|date',
+        ]);
+
+        $evaluasi->update($request->only([
+            'analisa', 'rekomendasi', 'hasil', 'tanggal_evaluasi',
+        ]));
+
+        return redirect()->route('evaluasi.index')
+            ->with('success', 'Evaluasi berhasil diperbarui.');
+    }
+
+    public function destroy(Evaluasi $evaluasi)
+    {
+        $evaluasi->monitoring->update(['status' => 'submitted']);
+        $evaluasi->delete();
+        return back()->with('success', 'Evaluasi berhasil dihapus.');
+    }
+
+    public function updateInline(Request $request)
+    {
+        $request->validate([
+            'monitoring_id' => 'required|exists:monitorings,id',
+            'field'         => 'required|in:analisa,hasil',
+            'value'         => 'required',
+        ]);
+
+        $evaluasi = Evaluasi::where('monitoring_id', $request->monitoring_id)->first();
+        
+        if (!$evaluasi) {
+            $evaluasi = new Evaluasi();
+            $evaluasi->monitoring_id = $request->monitoring_id;
+            $evaluasi->evaluator_id = Auth::id();
+            $evaluasi->tanggal_evaluasi = now();
+            $evaluasi->hasil = 'perlu_perhatian'; // Default hasil jika baru dibuat lewat analisa
+        }
+        
+        $evaluasi->{$request->field} = $request->value;
+        $evaluasi->save();
+
+        $evaluasi->monitoring->update(['status' => 'verified']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Evaluasi berhasil diperbarui.',
+        ]);
+    }
+}

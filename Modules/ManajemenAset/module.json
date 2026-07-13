@@ -1,0 +1,11 @@
+{
+    "name": "ManajemenAset",
+    "alias": "manajemenaset",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ManajemenAset\\Providers\\ManajemenAsetServiceProvider"
+    ],
+    "files": []
+}

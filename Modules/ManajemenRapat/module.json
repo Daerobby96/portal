@@ -1,0 +1,11 @@
+{
+    "name": "ManajemenRapat",
+    "alias": "manajemenrapat",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ManajemenRapat\\Providers\\ManajemenRapatServiceProvider"
+    ],
+    "files": []
+}

@@ -1,0 +1,13 @@
+{
+    "Spmi": true,
+    "DataAkademik": true,
+    "DataMaster": true,
+    "Kerjasama": true,
+    "ManajemenAset": true,
+    "ManajemenRapat": true,
+    "ManajemenSurat": true,
+    "Sdm": true,
+    "SystemAdmin": true,
+    "TracerStudy": true,
+    "Tridharma": true
+}

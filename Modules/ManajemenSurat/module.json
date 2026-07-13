@@ -1,0 +1,17 @@
+{
+    "name": "ManajemenSurat",
+    "alias": "manamejensurat",
+    "description": "Modul Manajemen Surat untuk mengelola surat masuk, surat keluar, disposisi, dan arsip surat",
+    "keywords": [
+        "surat",
+        "surat masuk",
+        "surat keluar",
+        "disposisi",
+        "arsip"
+    ],
+    "priority": 0,
+    "providers": [
+        "Modules\\ManajemenSurat\\Providers\\ManajemenSuratServiceProvider"
+    ],
+    "files": []
+}

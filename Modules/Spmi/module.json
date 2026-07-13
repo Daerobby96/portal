@@ -1,0 +1,11 @@
+{
+    "name": "Spmi",
+    "alias": "spmi",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Spmi\\Providers\\SpmiServiceProvider"
+    ],
+    "files": []
+}

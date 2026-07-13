@@ -1,0 +1,11 @@
+{
+    "name": "DataAkademik",
+    "alias": "dataakademik",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\DataAkademik\\Providers\\DataAkademikServiceProvider"
+    ],
+    "files": []
+}
