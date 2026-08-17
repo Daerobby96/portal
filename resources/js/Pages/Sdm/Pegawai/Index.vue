@@ -7,6 +7,7 @@ const props = defineProps({
     pegawais: Object,
     stats: Object,
     unitKerjas: Array,
+    jabatans: Array,
     roles: Array,
     permissions: Array,
     filters: Object,
@@ -14,14 +15,16 @@ const props = defineProps({
 
 const search = ref(props.filters?.search || '');
 const jenis = ref(props.filters?.jenis || '');
-const unitKerja = ref(props.filters?.unit_kerja || '');
+const unitKerjaId = ref(props.filters?.unit_kerja_id || '');
+const jabatanId = ref(props.filters?.jabatan_id || '');
 const status = ref(props.filters?.status || '');
 
 const handleFilter = () => {
     router.get('/sdm/pegawai', {
         search: search.value,
         jenis: jenis.value,
-        unit_kerja: unitKerja.value,
+        unit_kerja_id: unitKerjaId.value,
+        jabatan_id: jabatanId.value,
         status: status.value,
     }, {
         preserveState: true,
@@ -190,12 +193,21 @@ const submitImport = () => {
                         </select>
 
                         <select
-                            v-model="unitKerja"
+                            v-model="unitKerjaId"
                             @change="handleFilter"
-                            class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500 max-w-[180px]"
+                            class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500 max-w-[200px]"
                         >
                             <option value="">Semua Unit Kerja</option>
-                            <option v-for="u in unitKerjas" :key="u" :value="u">{{ u }}</option>
+                            <option v-for="u in unitKerjas" :key="u.id" :value="u.id">{{ u.nama }}</option>
+                        </select>
+
+                        <select
+                            v-model="jabatanId"
+                            @change="handleFilter"
+                            class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500 max-w-[200px]"
+                        >
+                            <option value="">Semua Jabatan</option>
+                            <option v-for="j in jabatans" :key="j.id" :value="j.id">{{ j.nama }}</option>
                         </select>
 
                         <select
@@ -240,8 +252,8 @@ const submitImport = () => {
                                     </div>
                                 </td>
                                 <td class="py-4 px-4">
-                                    <div class="font-semibold text-slate-800">{{ p.jabatan || '-' }}</div>
-                                    <div class="text-[11px] text-slate-400">{{ p.unit_kerja || '-' }}</div>
+                                    <div class="font-semibold text-slate-800">{{ p.nama_jabatan || p.jabatan || '-' }}</div>
+                                    <div class="text-[11px] text-slate-400">{{ p.nama_unit_kerja || p.unit_kerja || '-' }}</div>
                                 </td>
                                 <td class="py-4 px-4 text-center">
                                     <span

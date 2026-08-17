@@ -1,9 +1,12 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 const props = defineProps({
     users: Array,
+    unitKerjas: Array,
+    jabatans: Array,
 });
 
 const form = useForm({
@@ -11,12 +14,28 @@ const form = useForm({
     nip: '',
     email: '',
     no_hp: '',
+    unit_kerja_id: '',
+    jabatan_id: '',
     jabatan: '',
     unit_kerja: '',
     jenis_pegawai: 'Dosen',
     status_kepegawaian: 'Tetap Yayasan',
     user_id: '',
 });
+
+const handleUnitKerjaChange = () => {
+    if (form.unit_kerja_id) {
+        const found = props.unitKerjas.find(u => u.id === form.unit_kerja_id);
+        if (found) form.unit_kerja = found.nama;
+    }
+};
+
+const handleJabatanChange = () => {
+    if (form.jabatan_id) {
+        const found = props.jabatans.find(j => j.id === form.jabatan_id);
+        if (found) form.jabatan = found.nama;
+    }
+};
 
 const submit = () => {
     form.post('/sdm/pegawai');
@@ -146,28 +165,51 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Master Jabatan & Unit Kerja Dropdowns -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                                        Jabatan Fungsional / Struktural
+                                        Master Jabatan & Fungsional
                                     </label>
+                                    <select
+                                        v-model="form.jabatan_id"
+                                        @change="handleJabatanChange"
+                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold"
+                                    >
+                                        <option value="">-- Pilih dari Master Jabatan --</option>
+                                        <option v-for="j in jabatans" :key="j.id" :value="j.id">
+                                            {{ j.nama }} ({{ j.kategori?.replace('_', ' ') }})
+                                        </option>
+                                    </select>
                                     <input
+                                        v-if="!form.jabatan_id"
                                         v-model="form.jabatan"
                                         type="text"
-                                        placeholder="Contoh: Lektor / Ka. Lab"
-                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold text-slate-900"
+                                        placeholder="Atau ketik nama jabatan custom..."
+                                        class="w-full mt-2 px-4 py-2 text-xs rounded-xl border border-dashed border-slate-200 focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
 
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                                        Unit Kerja / Program Studi
+                                        Master Unit Kerja / Lembaga
                                     </label>
+                                    <select
+                                        v-model="form.unit_kerja_id"
+                                        @change="handleUnitKerjaChange"
+                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold"
+                                    >
+                                        <option value="">-- Pilih dari Master Unit Kerja --</option>
+                                        <option v-for="u in unitKerjas" :key="u.id" :value="u.id">
+                                            {{ u.nama }} [{{ u.tipe }}]
+                                        </option>
+                                    </select>
                                     <input
+                                        v-if="!form.unit_kerja_id"
                                         v-model="form.unit_kerja"
                                         type="text"
-                                        placeholder="Contoh: Prodi Teknik Informatika"
-                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold text-slate-900"
+                                        placeholder="Atau ketik nama unit kerja custom..."
+                                        class="w-full mt-2 px-4 py-2 text-xs rounded-xl border border-dashed border-slate-200 focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
                             </div>
@@ -182,25 +224,36 @@ const submit = () => {
                                 <button
                                     type="submit"
                                     :disabled="form.processing"
-                                    class="px-8 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition disabled:opacity-50 cursor-pointer"
+                                    class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-indigo-600/30"
                                 >
-                                    {{ form.processing ? 'Menyimpan...' : 'Simpan Pegawai' }}
+                                    <i class="bi bi-person-check-fill"></i>
+                                    <span>{{ form.processing ? 'Menyimpan...' : 'Simpan Pegawai' }}</span>
                                 </button>
                             </div>
+
                         </form>
                     </div>
                 </div>
 
-                <!-- Right Column: Sticky Sidebars (4 of 12) -->
-                <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
-                    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-3">
-                        <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                            <i class="bi bi-info-circle text-indigo-600"></i>
-                            <span>Pedoman Master SDM</span>
-                        </h4>
-                        <div class="space-y-2 text-xs text-slate-600 leading-relaxed">
-                            <p><strong>Dosen:</strong> Data dosen yang memiliki NIDN akan otomatis disinkronkan dengan modul <strong>SPMI IKU (Kualifikasi Dosen S3 & Lektor)</strong>.</p>
-                            <p><strong>Akun Sistem:</strong> Setelah pegawai disimpan, Anda dapat membuatkan akun login sistem di tabel utama pegawai.</p>
+                <!-- Right Column: Account Linkage & Tips (4 of 12) -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+                        <div class="flex items-center gap-2 text-indigo-900 font-bold text-xs">
+                            <i class="bi bi-link-45deg text-lg text-indigo-600"></i>
+                            <span>Tautkan Akun Sistem (User)</span>
+                        </div>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Jika pegawai ini sudah memiliki akun login portal, pilih akun di bawah untuk menghubungkan data profil dengan akun login.
+                        </p>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1.5">Pilih Akun User</label>
+                            <select
+                                v-model="form.user_id"
+                                class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500"
+                            >
+                                <option value="">-- Belum Ditautkan --</option>
+                                <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }} ({{ u.email }})</option>
+                            </select>
                         </div>
                     </div>
                 </div>

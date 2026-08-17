@@ -5,6 +5,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 const props = defineProps({
     pegawai: Object,
     users: Array,
+    unitKerjas: Array,
+    jabatans: Array,
 });
 
 const form = useForm({
@@ -12,12 +14,28 @@ const form = useForm({
     nip: props.pegawai.nip || '',
     email: props.pegawai.email || '',
     no_hp: props.pegawai.no_hp || '',
+    unit_kerja_id: props.pegawai.unit_kerja_id || '',
+    jabatan_id: props.pegawai.jabatan_id || '',
     jabatan: props.pegawai.jabatan || '',
     unit_kerja: props.pegawai.unit_kerja || '',
     jenis_pegawai: props.pegawai.jenis_pegawai,
     status_kepegawaian: props.pegawai.status_kepegawaian || 'Tetap Yayasan',
     is_aktif: Boolean(props.pegawai.is_aktif),
 });
+
+const handleUnitKerjaChange = () => {
+    if (form.unit_kerja_id) {
+        const found = props.unitKerjas.find(u => u.id === form.unit_kerja_id);
+        if (found) form.unit_kerja = found.nama;
+    }
+};
+
+const handleJabatanChange = () => {
+    if (form.jabatan_id) {
+        const found = props.jabatans.find(j => j.id === form.jabatan_id);
+        if (found) form.jabatan = found.nama;
+    }
+};
 
 const submit = () => {
     form.put(`/sdm/pegawai/${props.pegawai.id}`);
@@ -37,7 +55,7 @@ const submit = () => {
                         Kembali ke Master Pegawai
                     </a>
                     <div class="flex items-center gap-2 mb-1.5">
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 font-mono">
                             NIP: {{ pegawai.nip || '-' }}
                         </span>
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase" :class="pegawai.is_aktif ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/30' : 'bg-rose-500/30 text-rose-200 border border-rose-400/30'">
@@ -45,7 +63,7 @@ const submit = () => {
                         </span>
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                        Edit Data Pegawai
+                        Edit Data Pegawai: {{ pegawai.nama }}
                     </h1>
                     <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
                         Perbarui informasi identitas kepegawaian, penugasan unit kerja, dan kontak komunikasi resmi.
@@ -146,71 +164,99 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Master Jabatan & Unit Kerja Dropdowns -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                                        Jabatan Fungsional / Struktural
+                                        Master Jabatan & Fungsional
                                     </label>
+                                    <select
+                                        v-model="form.jabatan_id"
+                                        @change="handleJabatanChange"
+                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold"
+                                    >
+                                        <option value="">-- Pilih dari Master Jabatan --</option>
+                                        <option v-for="j in jabatans" :key="j.id" :value="j.id">
+                                            {{ j.nama }} ({{ j.kategori?.replace('_', ' ') }})
+                                        </option>
+                                    </select>
                                     <input
+                                        v-if="!form.jabatan_id"
                                         v-model="form.jabatan"
                                         type="text"
-                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold text-slate-900"
+                                        placeholder="Atau ketik nama jabatan custom..."
+                                        class="w-full mt-2 px-4 py-2 text-xs rounded-xl border border-dashed border-slate-200 focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
 
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                                        Unit Kerja / Program Studi
+                                        Master Unit Kerja / Lembaga
                                     </label>
+                                    <select
+                                        v-model="form.unit_kerja_id"
+                                        @change="handleUnitKerjaChange"
+                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold"
+                                    >
+                                        <option value="">-- Pilih dari Master Unit Kerja --</option>
+                                        <option v-for="u in unitKerjas" :key="u.id" :value="u.id">
+                                            {{ u.nama }} [{{ u.tipe }}]
+                                        </option>
+                                    </select>
                                     <input
+                                        v-if="!form.unit_kerja_id"
                                         v-model="form.unit_kerja"
                                         type="text"
-                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold text-slate-900"
+                                        placeholder="Atau ketik nama unit kerja custom..."
+                                        class="w-full mt-2 px-4 py-2 text-xs rounded-xl border border-dashed border-slate-200 focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
                             </div>
 
-                            <div class="pt-2">
-                                <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-100 cursor-pointer hover:bg-indigo-50 transition">
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                <label class="flex items-center gap-2.5 text-xs font-bold text-slate-700 cursor-pointer">
                                     <input
-                                        v-model="form.is_aktif"
                                         type="checkbox"
-                                        class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+                                        v-model="form.is_aktif"
+                                        class="rounded text-indigo-600 focus:ring-indigo-500"
                                     />
-                                    <div>
-                                        <span class="text-xs font-bold text-slate-900 block">Status Pegawai Aktif</span>
-                                        <span class="text-[10px] text-slate-500">Pegawai aktif menerima penugasan, presensi harian, dan evaluasi tridharma</span>
-                                    </div>
+                                    <span>Status Pegawai Aktif</span>
                                 </label>
+
+                                <div class="flex items-center gap-3">
+                                    <a
+                                        href="/sdm/pegawai"
+                                        class="px-6 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                                    >
+                                        Batal
+                                    </a>
+                                    <button
+                                        type="submit"
+                                        :disabled="form.processing"
+                                        class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-indigo-600/30"
+                                    >
+                                        <i class="bi bi-floppy-fill"></i>
+                                        <span>{{ form.processing ? 'Menyimpan...' : 'Perbarui Pegawai' }}</span>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                                <a
-                                    href="/sdm/pegawai"
-                                    class="px-6 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
-                                >
-                                    Batal
-                                </a>
-                                <button
-                                    type="submit"
-                                    :disabled="form.processing"
-                                    class="px-8 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition disabled:opacity-50 cursor-pointer"
-                                >
-                                    {{ form.processing ? 'Menyimpan...' : 'Perbarui Pegawai' }}
-                                </button>
-                            </div>
                         </form>
                     </div>
                 </div>
 
-                <!-- Right Column: Sticky Sidebars (4 of 12) -->
-                <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
-                    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-3">
-                        <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Info Akun & Status</h4>
-                        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs text-slate-700 space-y-2">
-                            <p><strong>Nama:</strong> {{ pegawai.nama }}</p>
-                            <p><strong>NIP:</strong> <span class="font-mono">{{ pegawai.nip || '-' }}</span></p>
-                            <p><strong>Akun Login:</strong> <span :class="pegawai.user_id ? 'text-emerald-600 font-bold' : 'text-slate-400'">{{ pegawai.user_id ? 'Tersinkron (User ID #' + pegawai.user_id + ')' : 'Belum Ada Akun' }}</span></p>
+                <!-- Right Column: Status Summary (4 of 12) -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+                        <div class="flex items-center gap-2 text-indigo-900 font-bold text-xs">
+                            <i class="bi bi-info-circle-fill text-indigo-600"></i>
+                            <span>Status Akun & Kepegawaian</span>
+                        </div>
+                        <div class="space-y-2 text-xs text-slate-600">
+                            <p><strong>NIP:</strong> <span class="font-mono font-bold">{{ pegawai.nip || 'Belum ada NIP' }}</span></p>
+                            <p><strong>Jabatan:</strong> {{ pegawai.nama_jabatan || '-' }}</p>
+                            <p><strong>Unit Kerja:</strong> {{ pegawai.nama_unit_kerja || '-' }}</p>
+                            <p><strong>Akun Login:</strong> <span :class="pegawai.user ? 'text-emerald-600 font-bold' : 'text-slate-400'">{{ pegawai.user ? 'Terhubung (' + pegawai.user.email + ')' : 'Belum Ditautkan' }}</span></p>
                         </div>
                     </div>
                 </div>

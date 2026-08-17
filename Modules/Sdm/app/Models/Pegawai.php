@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Traits\Loggable;
+use Modules\DataMaster\Models\UnitKerja;
+use Modules\DataMaster\Models\Jabatan;
 
 class Pegawai extends Model
 {
@@ -16,12 +18,18 @@ class Pegawai extends Model
     protected $fillable = [
         'nip', 'nama', 'email', 'no_hp',
         'jabatan', 'unit_kerja',
+        'unit_kerja_id', 'jabatan_id',
         'jenis_pegawai', 'status_kepegawaian',
         'is_aktif', 'user_id',
     ];
 
     protected $casts = [
         'is_aktif' => 'boolean',
+    ];
+
+    protected $appends = [
+        'nama_unit_kerja',
+        'nama_jabatan',
     ];
 
     // ── Constants ──────────────────────────────────────────────────
@@ -49,6 +57,16 @@ class Pegawai extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function unitKerjaRel(): BelongsTo
+    {
+        return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
+    }
+
+    public function jabatanRel(): BelongsTo
+    {
+        return $this->belongsTo(Jabatan::class, 'jabatan_id');
+    }
+
     // ── Scopes ──────────────────────────────────────────────────────
     public function scopeAktif($query)
     {
@@ -56,6 +74,16 @@ class Pegawai extends Model
     }
 
     // ── Accessors ───────────────────────────────────────────────────
+    public function getNamaUnitKerjaAttribute(): string
+    {
+        return $this->unitKerjaRel?->nama ?? $this->unit_kerja ?? '-';
+    }
+
+    public function getNamaJabatanAttribute(): string
+    {
+        return $this->jabatanRel?->nama ?? $this->jabatan ?? '-';
+    }
+
     public function getJenisBadgeAttribute(): string
     {
         return match ($this->jenis_pegawai) {
@@ -78,8 +106,8 @@ class Pegawai extends Model
     {
         return implode(' · ', array_filter([
             $this->jenis_pegawai,
-            $this->jabatan,
-            $this->unit_kerja,
+            $this->nama_jabatan,
+            $this->nama_unit_kerja,
         ]));
     }
 }

@@ -4,6 +4,8 @@ namespace Modules\Sdm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Modules\Sdm\Models\Pegawai;
+use Modules\DataMaster\Models\UnitKerja;
+use Modules\DataMaster\Models\Jabatan;
 use App\Models\User;
 use App\Imports\PegawaiImport;
 use App\Exports\TemplateExport;
@@ -16,16 +18,22 @@ class PegawaiController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pegawai::with('user')->latest();
+        $query = Pegawai::with(['user', 'unitKerjaRel', 'jabatanRel'])->latest();
 
         if ($request->filled('search')) {
             $q = $request->search;
             $query->where(function ($sq) use ($q) {
-                $sq->where('nama', 'like', "%{$q}%")
-                   ->orWhere('nip', 'like', "%{$q}%")
-                   ->orWhere('email', 'like', "%{$q}%")
-                   ->orWhere('unit_kerja', 'like', "%{$q}%")
-                   ->orWhere('jabatan', 'like', "%{$q}%");
+                $sq->where('nama', 'ilike', "%{$q}%")
+                   ->orWhere('nip', 'ilike', "%{$q}%")
+                   ->orWhere('email', 'ilike', "%{$q}%")
+                   ->orWhere('unit_kerja', 'ilike', "%{$q}%")
+                   ->orWhere('jabatan', 'ilike', "%{$q}%")
+                   ->orWhereHas('unitKerjaRel', function($uq) use ($q) {
+                       $uq->where('nama', 'ilike', "%{$q}%")->orWhere('kode', 'ilike', "%{$q}%");
+                   })
+                   ->orWhereHas('jabatanRel', function($jq) use ($q) {
+                       $jq->where('nama', 'ilike', "%{$q}%")->orWhere('kode', 'ilike', "%{$q}%");
+                   });
             });
         }
 
@@ -33,8 +41,14 @@ class PegawaiController extends Controller
             $query->where('jenis_pegawai', $request->jenis);
         }
 
-        if ($request->filled('unit_kerja')) {
-            $query->where('unit_kerja', 'like', '%' . $request->unit_kerja . '%');
+        if ($request->filled('unit_kerja_id')) {
+            $query->where('unit_kerja_id', $request->unit_kerja_id);
+        } elseif ($request->filled('unit_kerja')) {
+            $query->where('unit_kerja', 'ilike', '%' . $request->unit_kerja . '%');
+        }
+
+        if ($request->filled('jabatan_id')) {
+            $query->where('jabatan_id', $request->jabatan_id);
         }
 
         if ($request->filled('status')) {
@@ -50,9 +64,8 @@ class PegawaiController extends Controller
             'aktif'   => Pegawai::where('is_aktif', true)->count(),
         ];
 
-        $unitKerjas = Pegawai::whereNotNull('unit_kerja')
-            ->distinct()->orderBy('unit_kerja')
-            ->pluck('unit_kerja');
+        $unitKerjas = UnitKerja::where('is_aktif', true)->orderBy('nama')->get(['id', 'nama', 'kode', 'tipe']);
+        $jabatans = Jabatan::where('is_aktif', true)->orderBy('level_hirarki')->orderBy('nama')->get(['id', 'nama', 'kode', 'kategori']);
 
         $roles = \Spatie\Permission\Models\Role::orderBy('name')->get(); 
         $permissions = \Spatie\Permission\Models\Permission::orderBy('name')->get(); 
@@ -61,13 +74,15 @@ class PegawaiController extends Controller
             'pegawais'    => $pegawais,
             'stats'       => $stats,
             'unitKerjas'  => $unitKerjas,
+            'jabatans'    => $jabatans,
             'roles'       => $roles,
             'permissions' => $permissions,
             'filters'     => [
-                'search'     => $request->search ?? '',
-                'jenis'      => $request->jenis ?? '',
-                'unit_kerja' => $request->unit_kerja ?? '',
-                'status'     => $request->status ?? '',
+                'search'        => $request->search ?? '',
+                'jenis'         => $request->jenis ?? '',
+                'unit_kerja_id' => $request->unit_kerja_id ?? '',
+                'jabatan_id'    => $request->jabatan_id ?? '',
+                'status'        => $request->status ?? '',
             ],
         ]);
     }
@@ -75,8 +90,13 @@ class PegawaiController extends Controller
     public function create()
     {
         $users = User::where('is_active', true)->orderBy('name')->get();
+        $unitKerjas = UnitKerja::where('is_aktif', true)->orderBy('nama')->get(['id', 'nama', 'kode', 'tipe']);
+        $jabatans = Jabatan::where('is_aktif', true)->orderBy('level_hirarki')->orderBy('nama')->get(['id', 'nama', 'kode', 'kategori']);
+
         return Inertia::render('Sdm/Pegawai/Create', [
-            'users' => $users,
+            'users'      => $users,
+            'unitKerjas' => $unitKerjas,
+            'jabatans'   => $jabatans,
         ]);
     }
 
@@ -87,6 +107,8 @@ class PegawaiController extends Controller
             'nip'                 => 'nullable|string|max:50|unique:pegawais,nip',
             'email'               => 'nullable|email|max:255|unique:pegawais,email',
             'no_hp'               => 'nullable|string|max:50',
+            'unit_kerja_id'       => 'nullable|exists:unit_kerjas,id',
+            'jabatan_id'          => 'nullable|exists:jabatans,id',
             'jabatan'             => 'nullable|string|max:255',
             'unit_kerja'          => 'nullable|string|max:255',
             'jenis_pegawai'       => 'required|in:Dosen,Tenaga Kependidikan,Lainnya',
@@ -94,18 +116,34 @@ class PegawaiController extends Controller
             'user_id'             => 'nullable|exists:users,id',
         ]);
 
-        Pegawai::create($request->only([
-            'nip', 'nama', 'email', 'no_hp', 'jabatan', 'unit_kerja',
+        $data = $request->only([
+            'nip', 'nama', 'email', 'no_hp', 'unit_kerja_id', 'jabatan_id',
             'jenis_pegawai', 'status_kepegawaian', 'user_id',
-        ]) + ['is_aktif' => true]);
+        ]) + ['is_aktif' => true];
+
+        if ($request->filled('unit_kerja_id')) {
+            $uk = UnitKerja::find($request->unit_kerja_id);
+            $data['unit_kerja'] = $uk?->nama ?? $request->unit_kerja;
+        } else {
+            $data['unit_kerja'] = $request->unit_kerja;
+        }
+
+        if ($request->filled('jabatan_id')) {
+            $jb = Jabatan::find($request->jabatan_id);
+            $data['jabatan'] = $jb?->nama ?? $request->jabatan;
+        } else {
+            $data['jabatan'] = $request->jabatan;
+        }
+
+        Pegawai::create($data);
 
         return redirect('/sdm/pegawai')
-            ->with('success', "Pegawai \"{$request->nama}\" berhasil ditambahkan.");
+            ->with('success', "Pegawai \"{$request->nama}\" berhasil didaftarkan.");
     }
 
     public function show(Pegawai $pegawai)
     {
-        $pegawai->load('user');
+        $pegawai->load(['user', 'unitKerjaRel', 'jabatanRel']);
         return Inertia::render('Sdm/Pegawai/Show', [
             'pegawai' => $pegawai,
         ]);
@@ -113,10 +151,16 @@ class PegawaiController extends Controller
 
     public function edit(Pegawai $pegawai)
     {
+        $pegawai->load(['unitKerjaRel', 'jabatanRel']);
         $users = User::where('is_active', true)->orderBy('name')->get();
+        $unitKerjas = UnitKerja::where('is_aktif', true)->orderBy('nama')->get(['id', 'nama', 'kode', 'tipe']);
+        $jabatans = Jabatan::where('is_aktif', true)->orderBy('level_hirarki')->orderBy('nama')->get(['id', 'nama', 'kode', 'kategori']);
+
         return Inertia::render('Sdm/Pegawai/Edit', [
-            'pegawai' => $pegawai,
-            'users'   => $users,
+            'pegawai'    => $pegawai,
+            'users'      => $users,
+            'unitKerjas' => $unitKerjas,
+            'jabatans'   => $jabatans,
         ]);
     }
 
@@ -127,6 +171,8 @@ class PegawaiController extends Controller
             'nip'                 => 'nullable|string|max:50|unique:pegawais,nip,' . $pegawai->id,
             'email'               => 'nullable|email|max:255|unique:pegawais,email,' . $pegawai->id,
             'no_hp'               => 'nullable|string|max:50',
+            'unit_kerja_id'       => 'nullable|exists:unit_kerjas,id',
+            'jabatan_id'          => 'nullable|exists:jabatans,id',
             'jabatan'             => 'nullable|string|max:255',
             'unit_kerja'          => 'nullable|string|max:255',
             'jenis_pegawai'       => 'required|in:Dosen,Tenaga Kependidikan,Lainnya',
@@ -134,10 +180,26 @@ class PegawaiController extends Controller
             'user_id'             => 'nullable|exists:users,id',
         ]);
 
-        $pegawai->update($request->only([
-            'nip', 'nama', 'email', 'no_hp', 'jabatan', 'unit_kerja',
+        $data = $request->only([
+            'nip', 'nama', 'email', 'no_hp', 'unit_kerja_id', 'jabatan_id',
             'jenis_pegawai', 'status_kepegawaian', 'user_id',
-        ]) + ['is_aktif' => $request->boolean('is_aktif', true)]);
+        ]) + ['is_aktif' => $request->boolean('is_aktif', true)];
+
+        if ($request->filled('unit_kerja_id')) {
+            $uk = UnitKerja::find($request->unit_kerja_id);
+            $data['unit_kerja'] = $uk?->nama ?? $request->unit_kerja;
+        } else {
+            $data['unit_kerja'] = $request->unit_kerja;
+        }
+
+        if ($request->filled('jabatan_id')) {
+            $jb = Jabatan::find($request->jabatan_id);
+            $data['jabatan'] = $jb?->nama ?? $request->jabatan;
+        } else {
+            $data['jabatan'] = $request->jabatan;
+        }
+
+        $pegawai->update($data);
 
         return redirect('/sdm/pegawai')
             ->with('success', "Data pegawai \"{$pegawai->nama}\" berhasil diperbarui.");
@@ -158,17 +220,17 @@ class PegawaiController extends Controller
         }
 
         if (empty($pegawai->email)) {
-            return back()->with('error', 'Pegawai ini tidak memiliki email. Silakan edit data pegawai terlebih dahulu.');
+            return back()->with('error', 'Pegawai harus memiliki alamat email untuk dibuatkan akun.');
         }
 
         $user = User::create([
             'name'       => $pegawai->nama,
             'nip'        => $pegawai->nip,
             'email'      => $pegawai->email,
-            'unit_kerja' => $pegawai->unit_kerja,
-            'jabatan'    => $pegawai->jabatan,
             'no_hp'      => $pegawai->no_hp,
-            'password'   => \Illuminate\Support\Facades\Hash::make($request->password),
+            'unit_kerja' => $pegawai->nama_unit_kerja,
+            'jabatan'    => $pegawai->nama_jabatan,
+            'password'   => bcrypt($request->password),
             'is_active'  => true,
         ]);
 
@@ -181,113 +243,43 @@ class PegawaiController extends Controller
 
         $pegawai->update(['user_id' => $user->id]);
 
-        return back()->with('success', "Akun User untuk \"{$pegawai->nama}\" berhasil dibuat dan ditautkan.");
-    }
-
-    public function destroy(Pegawai $pegawai)
-    {
-        $pegawai->delete();
-        return redirect('/sdm/pegawai')->with('success', "Pegawai \"{$pegawai->nama}\" berhasil dihapus.");
+        return back()->with('success', "Akun login berhasil dibuat untuk \"{$pegawai->nama}\".");
     }
 
     public function toggleStatus(Pegawai $pegawai)
     {
         $pegawai->update(['is_aktif' => !$pegawai->is_aktif]);
         $status = $pegawai->is_aktif ? 'diaktifkan' : 'dinonaktifkan';
-        return back()->with('success', "Pegawai {$pegawai->nama} berhasil {$status}.");
+
+        return back()->with('success', "Pegawai \"{$pegawai->nama}\" berhasil {$status}.");
+    }
+
+    public function destroy(Pegawai $pegawai)
+    {
+        $nama = $pegawai->nama;
+        $pegawai->delete();
+
+        return redirect('/sdm/pegawai')
+            ->with('success', "Pegawai \"{$nama}\" berhasil dihapus.");
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:5120',
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
         ]);
 
         try {
-            $import = new PegawaiImport();
-            Excel::import($import, $request->file('file'));
-            return back()->with('success', 'Data pegawai berhasil diimport.');
+            Excel::import(new PegawaiImport, $request->file('file'));
+            return back()->with('success', 'Data pegawai berhasil diimpor.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal mengimport: ' . $e->getMessage());
+            return back()->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
         }
     }
 
     public function downloadTemplate()
     {
-        $headings = [
-            'nip', 'nama', 'email', 'no_hp',
-            'jabatan', 'unit_kerja',
-            'jenis_pegawai',      // Dosen / Tenaga Kependidikan / Lainnya
-            'status_kepegawaian', // PNS / PPPK / Honorer / Kontrak / Tetap Yayasan
-        ];
-        return Excel::download(
-            new TemplateExport($headings, 'Template Pegawai'),
-            'template-pegawai.xlsx'
-        );
-    }
-
-    public function search(Request $request)
-    {
-        $q = trim($request->get('q', ''));
-
-        if (strlen($q) < 2) {
-            return response()->json([]);
-        }
-
-        $pegawais = Pegawai::where('is_aktif', true)
-            ->where(function ($query) use ($q) {
-                $query->where('nama', 'like', "%{$q}%")
-                      ->orWhere('nip', 'like', "%{$q}%")
-                      ->orWhere('email', 'like', "%{$q}%")
-                      ->orWhere('jabatan', 'like', "%{$q}%")
-                      ->orWhere('unit_kerja', 'like', "%{$q}%");
-            })
-            ->with('user')
-            ->orderBy('nama')
-            ->limit(10)
-            ->get()
-            ->map(fn($p) => [
-                'source'     => 'pegawai',
-                'pegawai_id' => $p->id,
-                'user_id'    => $p->user_id,
-                'name'       => $p->nama,
-                'nip'        => $p->nip,
-                'email'      => $p->email,
-                'no_hp'      => $p->no_hp,
-                'jabatan'    => $p->jabatan,
-                'unit_kerja' => $p->unit_kerja,
-                'jenis'      => $p->jenis_pegawai,
-                'tipe'       => $p->user_id ? 'internal' : 'eksternal',
-            ]);
-
-        $pegawaiUserIds = $pegawais->pluck('user_id')->filter()->toArray();
-
-        $users = User::where('is_active', true)
-            ->whereNotIn('id', $pegawaiUserIds)
-            ->where(function ($query) use ($q) {
-                $query->where('name', 'like', "%{$q}%")
-                      ->orWhere('nip', 'like', "%{$q}%")
-                      ->orWhere('email', 'like', "%{$q}%")
-                      ->orWhere('jabatan', 'like', "%{$q}%")
-                      ->orWhere('unit_kerja', 'like', "%{$q}%");
-            })
-            ->orderBy('name')
-            ->limit(5)
-            ->get()
-            ->map(fn($u) => [
-                'source'     => 'user',
-                'pegawai_id' => null,
-                'user_id'    => $u->id,
-                'name'       => $u->name,
-                'nip'        => $u->nip,
-                'email'      => $u->email,
-                'no_hp'      => $u->no_hp,
-                'jabatan'    => $u->jabatan,
-                'unit_kerja' => $u->unit_kerja,
-                'jenis'      => Str::title(str_replace('_', ' ', $u->roles->first()?->name ?? '')),
-                'tipe'       => 'internal',
-            ]);
-
-        return response()->json($pegawais->concat($users)->take(15)->values());
+        $headings = ['nip', 'nama', 'email', 'no_hp', 'jabatan', 'unit_kerja', 'jenis_pegawai', 'status_kepegawaian'];
+        return Excel::download(new TemplateExport($headings, 'Template Pegawai'), 'template-pegawai.xlsx');
     }
 }

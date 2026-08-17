@@ -40,7 +40,7 @@ const activeModule = computed(() => {
     if (url.startsWith('/sdm')) {
         return 'sdm';
     }
-    if (url.startsWith('/periode') || url.startsWith('/program-studi')) {
+    if (url.startsWith('/periode') || url.startsWith('/program-studi') || url.startsWith('/unit-kerja') || url.startsWith('/jabatan') || url.startsWith('/ruangan')) {
         return 'datamaster';
     }
     if (url.startsWith('/settings') || url.startsWith('/users') || url.startsWith('/roles') || url.startsWith('/activity-log')) {
@@ -271,6 +271,45 @@ const toggleGroup = (groupKey) => {
                 >
                     <i class="bi bi-mortarboard text-base" :class="isRouteActive('/program-studi') ? 'text-sky-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
                     <span>Program Studi & Jurusan</span>
+                </a>
+
+                <div class="pt-2 pb-1">
+                    <div class="h-px bg-slate-100"></div>
+                </div>
+
+                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Kelembagaan & SDM</div>
+
+                <a
+                    href="/unit-kerja"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/unit-kerja') ? 'bg-sky-50 text-sky-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-building text-base" :class="isRouteActive('/unit-kerja') ? 'text-sky-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Unit Kerja & Lembaga</span>
+                </a>
+
+                <a
+                    href="/jabatan"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/jabatan') ? 'bg-sky-50 text-sky-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-award text-base" :class="isRouteActive('/jabatan') ? 'text-sky-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Jabatan & Fungsional</span>
+                </a>
+
+                <div class="pt-2 pb-1">
+                    <div class="h-px bg-slate-100"></div>
+                </div>
+
+                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Fasilitas Kampus</div>
+
+                <a
+                    href="/ruangan"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/ruangan') ? 'bg-sky-50 text-sky-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-door-open text-base" :class="isRouteActive('/ruangan') ? 'text-sky-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Ruangan & Gedung</span>
                 </a>
             </nav>
 
@@ -648,6 +687,9 @@ const toggleGroup = (groupKey) => {
                 <nav v-else-if="activeModule === 'datamaster'" class="space-y-1 flex-1 text-xs">
                     <a href="/periode" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-calendar3"></i><span>Periode Akademik</span></a>
                     <a href="/program-studi" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-mortarboard"></i><span>Program Studi</span></a>
+                    <a href="/unit-kerja" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-building"></i><span>Unit Kerja & Lembaga</span></a>
+                    <a href="/jabatan" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-award"></i><span>Jabatan & Fungsional</span></a>
+                    <a href="/ruangan" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-door-open"></i><span>Ruangan & Gedung</span></a>
                 </nav>
 
                 <!-- Mobile SystemAdmin Navigation -->
