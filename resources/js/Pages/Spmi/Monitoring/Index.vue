@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import axios from 'axios';
@@ -23,7 +23,7 @@ const savedState = reactive({});
 if (props.indikators) {
     props.indikators.forEach((ind) => {
         const val = ind.monitorings?.[0]?.nilai_capaian ?? '';
-        inlineValues[ind.id] = val;
+        inlineValues[ind.id] = val !== '' && val !== null ? parseFloat(val) : '';
     });
 }
 
@@ -37,37 +37,54 @@ const filterData = () => {
     });
 };
 
-const saveInline = async (indikator) => {
-    const val = inlineValues[indikator.id];
+const getTargetValue = (ind) => {
+    return parseFloat(ind.target || ind.target_nilai || 0);
+};
+
+const isTercapai = (ind) => {
+    const val = inlineValues[ind.id];
+    if (val === '' || val === null || isNaN(val)) return null;
+
+    const capaian = parseFloat(val);
+    const target = getTargetValue(ind);
+
+    if (ind.nama && ind.nama.toLowerCase().includes('waktu tunggu')) {
+        return capaian <= target;
+    }
+    return capaian >= target;
+};
+
+const saveInline = async (ind) => {
+    const val = inlineValues[ind.id];
     if (val === '' || val === null || isNaN(val)) return;
 
-    savingState[indikator.id] = true;
-    savedState[indikator.id] = false;
+    savingState[ind.id] = true;
+    savedState[ind.id] = false;
 
     try {
         const res = await axios.post('/monitoring/inline', {
-            indikator_id: indikator.id,
+            indikator_id: ind.id,
             periode_id: selectedPeriodeId.value,
             field: 'nilai_capaian',
             value: val,
         });
 
         if (res.data.success) {
-            savedState[indikator.id] = true;
-            if (!indikator.monitorings || indikator.monitorings.length === 0) {
-                indikator.monitorings = [{}];
+            savedState[ind.id] = true;
+            if (!ind.monitorings || ind.monitorings.length === 0) {
+                ind.monitorings = [{}];
             }
-            indikator.monitorings[0].nilai_capaian = val;
-            indikator.monitorings[0].is_tercapai = res.data.is_tercapai;
+            ind.monitorings[0].nilai_capaian = val;
+            ind.monitorings[0].is_tercapai = res.data.is_tercapai;
 
             setTimeout(() => {
-                savedState[indikator.id] = false;
+                savedState[ind.id] = false;
             }, 2500);
         }
     } catch (err) {
         alert(err.response?.data?.message || 'Gagal menyimpan nilai capaian.');
     } finally {
-        savingState[indikator.id] = false;
+        savingState[ind.id] = false;
     }
 };
 
@@ -196,7 +213,7 @@ const syncSiakad = () => {
                                 <th class="py-3.5 px-6">Standar Mutu</th>
                                 <th class="py-3.5 px-6">Target Mutu</th>
                                 <th class="py-3.5 px-6 w-56">Realisasi (Inline Input)</th>
-                                <th class="py-3.5 px-6">Status Capaian</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Status Capaian</th>
                                 <th class="py-3.5 px-6 text-right">Lampiran Bukti</th>
                             </tr>
                         </thead>
@@ -247,15 +264,25 @@ const syncSiakad = () => {
                                 </td>
 
                                 <!-- Status Capaian -->
-                                <td class="py-4 px-6">
+                                <td class="py-4 px-6 whitespace-nowrap">
                                     <span
-                                        v-if="ind.monitorings && ind.monitorings.length > 0 && ind.monitorings[0].nilai_capaian !== null && ind.monitorings[0].nilai_capaian !== ''"
-                                        class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
-                                        :class="ind.monitorings[0].is_tercapai ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
+                                        v-if="isTercapai(ind) === true"
+                                        class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-emerald-50 text-emerald-700 border-emerald-200 inline-flex items-center gap-1"
                                     >
-                                        {{ ind.monitorings[0].is_tercapai ? 'Tercapai' : 'Belum Tercapai' }}
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Tercapai</span>
                                     </span>
-                                    <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
+                                    <span
+                                        v-else-if="isTercapai(ind) === false"
+                                        class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-rose-50 text-rose-700 border-rose-200 inline-flex items-center gap-1"
+                                    >
+                                        <i class="bi bi-x-circle-fill"></i>
+                                        <span>Belum Tercapai</span>
+                                    </span>
+                                    <span
+                                        v-else
+                                        class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 inline-flex items-center"
+                                    >
                                         Belum Diisi
                                     </span>
                                 </td>

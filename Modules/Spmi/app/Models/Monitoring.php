@@ -22,6 +22,12 @@ class Monitoring extends Model
         'nilai_capaian' => 'decimal:2',
     ];
 
+    protected $appends = [
+        'is_tercapai',
+        'persentase_capaian',
+        'status_kinerja',
+    ];
+
     public function periode(): BelongsTo
     {
         return $this->belongsTo(Periode::class);
