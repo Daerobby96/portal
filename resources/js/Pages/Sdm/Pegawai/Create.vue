@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
 
 const props = defineProps({
     users: Array,
@@ -23,17 +24,19 @@ const form = useForm({
     user_id: '',
 });
 
-const handleUnitKerjaChange = () => {
-    if (form.unit_kerja_id) {
-        const found = props.unitKerjas.find(u => u.id === form.unit_kerja_id);
-        if (found) form.unit_kerja = found.nama;
+const onUnitKerjaSelect = (opt) => {
+    if (opt) {
+        form.unit_kerja = opt.label || '';
+    } else {
+        form.unit_kerja = '';
     }
 };
 
-const handleJabatanChange = () => {
-    if (form.jabatan_id) {
-        const found = props.jabatans.find(j => j.id === form.jabatan_id);
-        if (found) form.jabatan = found.nama;
+const onJabatanSelect = (opt) => {
+    if (opt) {
+        form.jabatan = opt.label || '';
+    } else {
+        form.jabatan = '';
     }
 };
 
@@ -165,50 +168,44 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <!-- Master Jabatan & Unit Kerja Dropdowns -->
+                            <!-- Autocomplete Search Dropdowns -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                                        Master Jabatan & Fungsional
+                                        Master Jabatan & Fungsional (Autocomplete)
                                     </label>
-                                    <select
+                                    <SearchableSelect
                                         v-model="form.jabatan_id"
-                                        @change="handleJabatanChange"
-                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold"
-                                    >
-                                        <option value="">-- Pilih dari Master Jabatan --</option>
-                                        <option v-for="j in jabatans" :key="j.id" :value="j.id">
-                                            {{ j.nama }} ({{ j.kategori?.replace('_', ' ') }})
-                                        </option>
-                                    </select>
+                                        :options="jabatans"
+                                        placeholder="Cari atau pilih jabatan..."
+                                        search-placeholder="Ketik nama/kode jabatan..."
+                                        @change="onJabatanSelect"
+                                    />
                                     <input
                                         v-if="!form.jabatan_id"
                                         v-model="form.jabatan"
                                         type="text"
-                                        placeholder="Atau ketik nama jabatan custom..."
+                                        placeholder="Atau ketik nama jabatan manual..."
                                         class="w-full mt-2 px-4 py-2 text-xs rounded-xl border border-dashed border-slate-200 focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
 
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                                        Master Unit Kerja / Lembaga
+                                        Master Unit Kerja (Autocomplete)
                                     </label>
-                                    <select
+                                    <SearchableSelect
                                         v-model="form.unit_kerja_id"
-                                        @change="handleUnitKerjaChange"
-                                        class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-semibold"
-                                    >
-                                        <option value="">-- Pilih dari Master Unit Kerja --</option>
-                                        <option v-for="u in unitKerjas" :key="u.id" :value="u.id">
-                                            {{ u.nama }} [{{ u.tipe }}]
-                                        </option>
-                                    </select>
+                                        :options="unitKerjas"
+                                        placeholder="Cari atau pilih unit kerja..."
+                                        search-placeholder="Ketik jurusan/biro/lembaga..."
+                                        @change="onUnitKerjaSelect"
+                                    />
                                     <input
                                         v-if="!form.unit_kerja_id"
                                         v-model="form.unit_kerja"
                                         type="text"
-                                        placeholder="Atau ketik nama unit kerja custom..."
+                                        placeholder="Atau ketik nama unit kerja manual..."
                                         class="w-full mt-2 px-4 py-2 text-xs rounded-xl border border-dashed border-slate-200 focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
@@ -235,7 +232,7 @@ const submit = () => {
                     </div>
                 </div>
 
-                <!-- Right Column: Account Linkage & Tips (4 of 12) -->
+                <!-- Right Column: Account Linkage (4 of 12) -->
                 <div class="lg:col-span-4 space-y-6">
                     <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
                         <div class="flex items-center gap-2 text-indigo-900 font-bold text-xs">
@@ -243,17 +240,16 @@ const submit = () => {
                             <span>Tautkan Akun Sistem (User)</span>
                         </div>
                         <p class="text-xs text-slate-500 leading-relaxed">
-                            Jika pegawai ini sudah memiliki akun login portal, pilih akun di bawah untuk menghubungkan data profil dengan akun login.
+                            Cari dan pilih akun login portal untuk menghubungkan data pegawai dengan pengguna sistem:
                         </p>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1.5">Pilih Akun User</label>
-                            <select
+                            <SearchableSelect
                                 v-model="form.user_id"
-                                class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="">-- Belum Ditautkan --</option>
-                                <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }} ({{ u.email }})</option>
-                            </select>
+                                :options="users"
+                                placeholder="Cari nama atau email user..."
+                                search-placeholder="Ketik email / nama..."
+                            />
                         </div>
                     </div>
                 </div>
