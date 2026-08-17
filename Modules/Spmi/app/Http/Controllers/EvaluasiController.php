@@ -32,7 +32,12 @@ class EvaluasiController extends Controller
             'belum_eval'      => $monitorings->filter(fn($m) => !$m->evaluasi)->count(),
         ];
 
-        return view('spmi::evaluasi.index', compact('monitorings', 'stats', 'periodes', 'periodeSel'));
+        return \Inertia\Inertia::render('Spmi/Evaluasi/Index', [
+            'monitorings' => $monitorings,
+            'stats'       => $stats,
+            'periodes'    => $periodes,
+            'periodeSel'  => $periodeSel,
+        ]);
     }
 
     public function create(Request $request)
@@ -47,7 +52,10 @@ class EvaluasiController extends Controller
             ? Monitoring::with('indikator')->find($request->monitoring_id)
             : null;
 
-        return view('spmi::evaluasi.create', compact('monitorings', 'selected'));
+        return \Inertia\Inertia::render('Spmi/Evaluasi/Create', [
+            'monitorings' => $monitorings,
+            'selected'    => $selected,
+        ]);
     }
 
     public function store(Request $request)

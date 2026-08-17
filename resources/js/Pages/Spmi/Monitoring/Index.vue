@@ -212,7 +212,7 @@ const syncSiakad = () => {
                                 <th class="py-3.5 px-6">Kode & Nama Indikator</th>
                                 <th class="py-3.5 px-6">Standar Mutu</th>
                                 <th class="py-3.5 px-6">Target Mutu</th>
-                                <th class="py-3.5 px-6 w-56">Realisasi (Inline Input)</th>
+                                <th class="py-3.5 px-6 w-56">Realisasi</th>
                                 <th class="py-3.5 px-6 whitespace-nowrap">Status Capaian</th>
                                 <th class="py-3.5 px-6 text-right">Lampiran Bukti</th>
                             </tr>
