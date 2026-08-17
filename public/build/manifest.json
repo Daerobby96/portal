@@ -8,12 +8,21 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CvWlmMb9.css",
+    "file": "assets/app-j2RkF3qp.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
+  "resources/js/Pages/Auth/Login.vue": {
+    "file": "assets/Login-D5cnEI-f.js",
+    "name": "Login",
+    "src": "resources/js/Pages/Auth/Login.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
   "resources/js/Pages/Demo/VueTest.vue": {
-    "file": "assets/VueTest-DGSd7Vcd.js",
+    "file": "assets/VueTest-Ccgg1Tsy.js",
     "name": "VueTest",
     "src": "resources/js/Pages/Demo/VueTest.vue",
     "isDynamicEntry": true,
@@ -21,13 +30,24 @@
       "resources/js/app.js"
     ]
   },
+  "resources/js/Pages/Portal/Index.vue": {
+    "file": "assets/Index-Bi9nqIKl.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Portal/Index.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
   "resources/js/app.js": {
-    "file": "assets/app-Kbmk9Kqk.js",
+    "file": "assets/app-DpQmpOjq.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
-      "resources/js/Pages/Demo/VueTest.vue"
+      "resources/js/Pages/Auth/Login.vue",
+      "resources/js/Pages/Demo/VueTest.vue",
+      "resources/js/Pages/Portal/Index.vue"
     ]
   }
 }
