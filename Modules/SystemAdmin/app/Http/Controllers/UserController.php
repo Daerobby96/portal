@@ -1,15 +1,16 @@
 <?php
-namespace Modules\SystemAdmin\Http\Controllers;
-use App\Http\Controllers\Controller;
 
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+namespace Modules\SystemAdmin\Http\Controllers;
+
+use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Imports\UserImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -18,11 +19,13 @@ class UserController extends Controller
         $query = User::with('roles')->latest();
 
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%')
-                  ->orWhere('nip', 'like', '%' . $request->search . '%')
-                  ->orWhere('unit_kerja', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('email', 'ilike', "%{$search}%")
+                  ->orWhere('nip', 'ilike', "%{$search}%")
+                  ->orWhere('unit_kerja', 'ilike', "%{$search}%")
+                  ->orWhere('jabatan', 'ilike', "%{$search}%");
             });
         }
 
@@ -34,39 +37,54 @@ class UserController extends Controller
             $query->where('is_active', $request->status === 'aktif');
         }
 
-        $users = $query->paginate(10)->withQueryString();
-        $roles = Role::orderBy('name')->get();
+        $users = $query->paginate(12)->withQueryString();
+        $roles = Role::orderBy('name')->get(['id', 'name']);
+        
         $stats = [
-            'total'   => User::count(),
-            'aktif'   => User::where('is_active', true)->count(),
-            'nonaktif'=> User::where('is_active', false)->count(),
+            'total'    => User::count(),
+            'aktif'    => User::where('is_active', true)->count(),
+            'nonaktif' => User::where('is_active', false)->count(),
+            'roles_count' => Role::count(),
         ];
 
-        return view('systemadmin::users.index', compact('users', 'roles', 'stats'));
+        return Inertia::render('SystemAdmin/Users/Index', [
+            'users'   => $users,
+            'roles'   => $roles,
+            'stats'   => $stats,
+            'filters' => [
+                'search' => $request->search ?? '',
+                'role'   => $request->role ?? '',
+                'status' => $request->status ?? '',
+            ],
+        ]);
     }
 
     public function create()
     {
         $roles = Role::orderBy('name')->get();
         $permissions = Permission::orderBy('name')->get();
-        return view('systemadmin::users.create', compact('roles', 'permissions'));
+
+        return Inertia::render('SystemAdmin/Users/Create', [
+            'roles'       => $roles,
+            'permissions' => $permissions,
+        ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'roles'       => 'nullable|array',
-            'roles.*'     => 'exists:roles,name',
-            'permissions' => 'nullable|array',
+            'name'         => 'required|string|max:255',
+            'nip'          => 'nullable|string|max:30|unique:users,nip',
+            'email'        => 'required|email|unique:users,email',
+            'unit_kerja'   => 'nullable|string|max:255',
+            'jabatan'      => 'nullable|string|max:255',
+            'no_hp'        => 'nullable|string|max:20',
+            'password'     => 'required|string|min:8|confirmed',
+            'roles'        => 'nullable|array',
+            'roles.*'      => 'exists:roles,name',
+            'permissions'  => 'nullable|array',
             'permissions.*'=> 'exists:permissions,name',
-            'name'       => 'required|string|max:255',
-            'nip'        => 'nullable|string|max:30|unique:users,nip',
-            'email'      => 'required|email|unique:users,email',
-            'unit_kerja' => 'nullable|string|max:255',
-            'jabatan'    => 'nullable|string|max:255',
-            'no_hp'      => 'nullable|string|max:20',
-            'password'   => 'required|string|min:8|confirmed',
-            'foto'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'foto'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $fotoPath = null;
@@ -94,40 +112,50 @@ class UserController extends Controller
         }
 
         return redirect()->route('users.index')
-            ->with('success', 'User "' . $request->name . '" berhasil ditambahkan.');
+            ->with('success', "Akun pengguna {$request->name} berhasil didaftarkan.");
     }
 
     public function show(User $user)
     {
-        $user->load('roles', 'permissions');
-        return view('systemadmin::users.show', compact('user'));
+        $user->load(['roles', 'permissions']);
+
+        return Inertia::render('SystemAdmin/Users/Show', [
+            'user' => $user,
+        ]);
     }
 
     public function edit(User $user)
     {
+        $user->load(['roles', 'permissions']);
         $roles = Role::orderBy('name')->get();
         $permissions = Permission::orderBy('name')->get();
         $userRoles = $user->roles->pluck('name')->toArray();
         $userPermissions = $user->permissions->pluck('name')->toArray();
 
-        return view('systemadmin::users.edit', compact('user', 'roles', 'permissions', 'userRoles', 'userPermissions'));
+        return Inertia::render('SystemAdmin/Users/Edit', [
+            'user'            => $user,
+            'roles'           => $roles,
+            'permissions'     => $permissions,
+            'userRoles'       => $userRoles,
+            'userPermissions' => $userPermissions,
+        ]);
     }
 
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'roles'       => 'nullable|array',
-            'roles.*'     => 'exists:roles,name',
-            'permissions' => 'nullable|array',
+            'name'         => 'required|string|max:255',
+            'nip'          => 'nullable|string|max:30|unique:users,nip,' . $user->id,
+            'email'        => 'required|email|unique:users,email,' . $user->id,
+            'unit_kerja'   => 'nullable|string|max:255',
+            'jabatan'      => 'nullable|string|max:255',
+            'no_hp'        => 'nullable|string|max:20',
+            'password'     => 'nullable|string|min:8|confirmed',
+            'roles'        => 'nullable|array',
+            'roles.*'      => 'exists:roles,name',
+            'permissions'  => 'nullable|array',
             'permissions.*'=> 'exists:permissions,name',
-            'name'       => 'required|string|max:255',
-            'nip'        => 'nullable|string|max:30|unique:users,nip,' . $user->id,
-            'email'      => 'required|email|unique:users,email,' . $user->id,
-            'unit_kerja' => 'nullable|string|max:255',
-            'jabatan'    => 'nullable|string|max:255',
-            'no_hp'      => 'nullable|string|max:20',
-            'password'   => 'nullable|string|min:8|confirmed',
-            'foto'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'foto'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $data = $request->only([
@@ -146,35 +174,40 @@ class UserController extends Controller
 
         $user->update($data);
 
-        $user->syncRoles($request->roles ?? []);
-        $user->syncPermissions($request->permissions ?? []);
+        if ($request->has('roles')) {
+            $user->syncRoles($request->roles ?? []);
+        }
+        if ($request->has('permissions')) {
+            $user->syncPermissions($request->permissions ?? []);
+        }
 
         return redirect()->route('users.index')
-            ->with('success', 'User berhasil diperbarui.');
+            ->with('success', "Data pengguna {$user->name} berhasil diperbarui.");
     }
 
     public function destroy(User $user)
     {
         if ($user->id === auth()->id()) {
-            return back()->with('error', 'Tidak dapat menghapus akun sendiri.');
+            return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
 
         if ($user->foto) Storage::disk('public')->delete($user->foto);
         $user->delete();
 
         return redirect()->route('users.index')
-            ->with('success', 'User berhasil dihapus.');
+            ->with('success', 'Akun pengguna berhasil dihapus.');
     }
 
     public function toggleStatus(User $user)
     {
         if ($user->id === auth()->id()) {
-            return back()->with('error', 'Tidak dapat menonaktifkan akun sendiri.');
+            return back()->with('error', 'Anda tidak dapat menonaktifkan akun sendiri.');
         }
 
         $user->update(['is_active' => !$user->is_active]);
         $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        return back()->with('success', "User {$user->name} berhasil {$status}.");
+
+        return back()->with('success', "Akun {$user->name} berhasil {$status}.");
     }
 
     public function import(Request $request)
@@ -184,8 +217,11 @@ class UserController extends Controller
         ]);
 
         try {
-            Excel::import(new \App\Imports\UserImport, $request->file('file'));
-            return back()->with('success', 'Data user berhasil diimport.');
+            if (class_exists(\App\Imports\UserImport::class)) {
+                Excel::import(new \App\Imports\UserImport, $request->file('file'));
+                return back()->with('success', 'Data pengguna berhasil diimport.');
+            }
+            return back()->with('error', 'Fitur UserImport sedang dalam pemeliharaan.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal mengimport data: ' . $e->getMessage());
         }
@@ -193,7 +229,10 @@ class UserController extends Controller
 
     public function downloadTemplate()
     {
-        $headings = ['nama', 'email', 'role', 'nip', 'unit_kerja', 'jabatan', 'password'];
-        return Excel::download(new \App\Exports\TemplateExport($headings, 'Template User'), 'template-user.xlsx');
+        if (class_exists(\App\Exports\TemplateExport::class)) {
+            $headings = ['nama', 'email', 'role', 'nip', 'unit_kerja', 'jabatan', 'password'];
+            return Excel::download(new \App\Exports\TemplateExport($headings, 'Template User'), 'template-user.xlsx');
+        }
+        return back()->with('error', 'Template download belum tersedia.');
     }
 }

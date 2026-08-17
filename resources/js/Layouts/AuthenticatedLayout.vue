@@ -43,6 +43,9 @@ const activeModule = computed(() => {
     if (url.startsWith('/periode') || url.startsWith('/program-studi')) {
         return 'datamaster';
     }
+    if (url.startsWith('/settings') || url.startsWith('/users') || url.startsWith('/roles') || url.startsWith('/activity-log')) {
+        return 'systemadmin';
+    }
     return 'spmi';
 });
 
@@ -131,6 +134,28 @@ const toggleGroup = (groupKey) => {
                             </div>
                             <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight truncate">
                                 Master Data Institusi
+                            </span>
+                        </div>
+                    </Link>
+                </div>
+
+                <!-- 4. System Admin Header -->
+                <div v-else-if="activeModule === 'systemadmin'" class="flex items-center gap-3">
+                    <Link href="/settings" class="flex items-center gap-3 group min-w-0">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-700 via-slate-800 to-indigo-950 flex items-center justify-center text-white font-black text-lg shadow-md shadow-slate-900/20 group-hover:scale-105 transition duration-200 shrink-0">
+                            <i class="bi bi-gear-fill text-lg text-slate-200"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-black text-slate-900 text-base tracking-tight leading-none group-hover:text-indigo-600 transition">
+                                    ERP-POLKA
+                                </span>
+                                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-slate-100 text-slate-800 border border-slate-300/60 tracking-wider">
+                                    SYSTEM ADMIN
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight truncate">
+                                Konfigurasi & Akses
                             </span>
                         </div>
                     </Link>
@@ -249,7 +274,60 @@ const toggleGroup = (groupKey) => {
                 </a>
             </nav>
 
-            <!-- 3. MODUL SPMI (PPEPP) SIDEBAR MENU -->
+            <!-- 3. SYSTEM ADMIN SIDEBAR MENU -->
+            <nav v-else-if="activeModule === 'systemadmin'" class="space-y-1.5 flex-1 text-xs">
+                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Konfigurasi Institusi</div>
+                
+                <a
+                    href="/settings"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/settings') ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-sliders text-base" :class="isRouteActive('/settings') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Pengaturan Sistem & Kop</span>
+                </a>
+
+                <div class="pt-2 pb-1">
+                    <div class="h-px bg-slate-100"></div>
+                </div>
+
+                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Manajemen Pengguna</div>
+
+                <a
+                    href="/users"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/users') ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-people-fill text-base" :class="isRouteActive('/users') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Pengguna & Akun</span>
+                </a>
+
+                <a
+                    href="/roles"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/roles') ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-shield-lock-fill text-base" :class="isRouteActive('/roles') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Peran & Hak Akses (Roles)</span>
+                </a>
+
+                <div class="pt-2 pb-1">
+                    <div class="h-px bg-slate-100"></div>
+                </div>
+
+                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Keamanan & Audit</div>
+
+                <a
+                    href="/activity-log"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/activity-log') ? 'bg-slate-900 text-white font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-clock-history text-base" :class="isRouteActive('/activity-log') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Log Aktivitas Sistem</span>
+                </a>
+            </nav>
+
+            <!-- 4. MODUL SPMI (PPEPP) SIDEBAR MENU -->
             <nav v-else class="space-y-1.5 flex-1 text-xs">
                 <!-- Dashboard -->
                 <a
@@ -542,7 +620,7 @@ const toggleGroup = (groupKey) => {
                         <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white flex items-center justify-center font-bold text-base shadow-sm">P</div>
                         <div>
                             <span class="font-extrabold text-slate-900 text-sm block leading-tight">ERP-POLKA</span>
-                            <span class="text-[10px] font-bold uppercase text-indigo-600">{{ activeModule === 'sdm' ? 'MODUL SDM' : (activeModule === 'datamaster' ? 'DATA MASTER' : 'SPMI PPEPP') }}</span>
+                            <span class="text-[10px] font-bold uppercase text-indigo-600">{{ activeModule === 'sdm' ? 'MODUL SDM' : (activeModule === 'datamaster' ? 'DATA MASTER' : (activeModule === 'systemadmin' ? 'SYSTEM ADMIN' : 'SPMI PPEPP')) }}</span>
                         </div>
                     </div>
                     <button @click="mobileSidebarOpen = false" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700">
@@ -570,6 +648,14 @@ const toggleGroup = (groupKey) => {
                 <nav v-else-if="activeModule === 'datamaster'" class="space-y-1 flex-1 text-xs">
                     <a href="/periode" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-calendar3"></i><span>Periode Akademik</span></a>
                     <a href="/program-studi" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-mortarboard"></i><span>Program Studi</span></a>
+                </nav>
+
+                <!-- Mobile SystemAdmin Navigation -->
+                <nav v-else-if="activeModule === 'systemadmin'" class="space-y-1 flex-1 text-xs">
+                    <a href="/settings" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-sliders"></i><span>Pengaturan Sistem</span></a>
+                    <a href="/users" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-people-fill"></i><span>Pengguna & Akun</span></a>
+                    <a href="/roles" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-shield-lock-fill"></i><span>Peran & Hak Akses</span></a>
+                    <a href="/activity-log" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-clock-history"></i><span>Log Aktivitas</span></a>
                 </nav>
 
                 <!-- Mobile SPMI Navigation -->

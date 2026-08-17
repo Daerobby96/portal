@@ -1,10 +1,12 @@
 <?php
 
 namespace Modules\SystemAdmin\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ActivityLogController extends Controller
 {
@@ -13,11 +15,15 @@ class ActivityLogController extends Controller
         $query = ActivityLog::with('user')->latest();
 
         if ($request->filled('search')) {
-            $query->where('description', 'like', '%' . $request->search . '%')
-                  ->orWhere('action', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('user', function($q) use ($request) {
-                      $q->where('name', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'ilike', "%{$search}%")
+                  ->orWhere('action', 'ilike', "%{$search}%")
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('name', 'ilike', "%{$search}%")
+                                ->orWhere('email', 'ilike', "%{$search}%");
                   });
+            });
         }
 
         if ($request->filled('user_id')) {
@@ -28,14 +34,23 @@ class ActivityLogController extends Controller
             $query->where('action', $request->action);
         }
 
-        $logs = $query->paginate(20)->withQueryString();
-        $users = \App\Models\User::orderBy('name')->get();
+        $logs = $query->paginate(25)->withQueryString();
+        $users = User::orderBy('name')->get(['id', 'name', 'email']);
 
-        return view('systemadmin::activity-log.index', compact('logs', 'users'));
-    }
+        $actions = ActivityLog::select('action')
+            ->distinct()
+            ->whereNotNull('action')
+            ->pluck('action');
 
-    public function show(ActivityLog $log)
-    {
-        return view('systemadmin::activity-log.show', compact('log'));
+        return Inertia::render('SystemAdmin/ActivityLog/Index', [
+            'logs'    => $logs,
+            'users'   => $users,
+            'actions' => $actions,
+            'filters' => [
+                'search'  => $request->search ?? '',
+                'user_id' => $request->user_id ?? '',
+                'action'  => $request->action ?? '',
+            ],
+        ]);
     }
 }
