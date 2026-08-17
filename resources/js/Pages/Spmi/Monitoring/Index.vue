@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import axios from 'axios';
 
 const props = defineProps({
     indikators: Array,
@@ -13,6 +14,19 @@ const props = defineProps({
 const searchQuery = ref('');
 const selectedPeriodeId = ref(props.periodeSel?.id || '');
 
+// Local reactive state for inline input values & saving indicators
+const inlineValues = reactive({});
+const savingState = reactive({});
+const savedState = reactive({});
+
+// Initialize inline values from props
+if (props.indikators) {
+    props.indikators.forEach((ind) => {
+        const val = ind.monitorings?.[0]?.nilai_capaian ?? '';
+        inlineValues[ind.id] = val;
+    });
+}
+
 const filterData = () => {
     router.get('/monitoring', {
         search: searchQuery.value,
@@ -21,6 +35,40 @@ const filterData = () => {
         preserveState: true,
         replace: true,
     });
+};
+
+const saveInline = async (indikator) => {
+    const val = inlineValues[indikator.id];
+    if (val === '' || val === null || isNaN(val)) return;
+
+    savingState[indikator.id] = true;
+    savedState[indikator.id] = false;
+
+    try {
+        const res = await axios.post('/monitoring/inline', {
+            indikator_id: indikator.id,
+            periode_id: selectedPeriodeId.value,
+            field: 'nilai_capaian',
+            value: val,
+        });
+
+        if (res.data.success) {
+            savedState[indikator.id] = true;
+            if (!indikator.monitorings || indikator.monitorings.length === 0) {
+                indikator.monitorings = [{}];
+            }
+            indikator.monitorings[0].nilai_capaian = val;
+            indikator.monitorings[0].is_tercapai = res.data.is_tercapai;
+
+            setTimeout(() => {
+                savedState[indikator.id] = false;
+            }, 2500);
+        }
+    } catch (err) {
+        alert(err.response?.data?.message || 'Gagal menyimpan nilai capaian.');
+    } finally {
+        savingState[indikator.id] = false;
+    }
 };
 
 const syncSiakad = () => {
@@ -46,7 +94,7 @@ const syncSiakad = () => {
                         Monitoring Indikator Mutu (IKU / IKT)
                     </h1>
                     <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
-                        Pencatatan realisasi capaian indikator kinerja utama & tambahan terhadap target baseline standar mutu.
+                        Pengisian capaian realisasi secara <strong>Live Inline</strong> langsung pada tabel instrumen mutu.
                     </p>
                 </div>
 
@@ -63,7 +111,7 @@ const syncSiakad = () => {
                         class="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30"
                     >
                         <i class="bi bi-plus-lg"></i>
-                        <span>Input Realisasi</span>
+                        <span>Input Form Lengkap</span>
                     </a>
                 </div>
             </div>
@@ -111,7 +159,7 @@ const syncSiakad = () => {
                 </div>
             </div>
 
-            <!-- Table Card -->
+            <!-- Table Card with Live Inline Input -->
             <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
                 <!-- Toolbar -->
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -130,7 +178,7 @@ const syncSiakad = () => {
                         <select
                             v-model="selectedPeriodeId"
                             @change="filterData"
-                            class="px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            class="px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
                         >
                             <option v-for="p in periodes" :key="p.id" :value="p.id">
                                 Periode: {{ p.nama }} ({{ p.tahun }})
@@ -146,10 +194,10 @@ const syncSiakad = () => {
                             <tr>
                                 <th class="py-3.5 px-6">Kode & Nama Indikator</th>
                                 <th class="py-3.5 px-6">Standar Mutu</th>
-                                <th class="py-3.5 px-6">Target Baseline</th>
-                                <th class="py-3.5 px-6">Realisasi Capaian</th>
+                                <th class="py-3.5 px-6">Target Mutu</th>
+                                <th class="py-3.5 px-6 w-56">Realisasi (Inline Input)</th>
                                 <th class="py-3.5 px-6">Status Capaian</th>
-                                <th class="py-3.5 px-6 text-right">Aksi</th>
+                                <th class="py-3.5 px-6 text-right">Lampiran Bukti</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -161,38 +209,66 @@ const syncSiakad = () => {
                                 <td class="py-4 px-6">
                                     <span class="font-mono font-bold text-indigo-600 block">{{ ind.kode }}</span>
                                     <span class="font-semibold text-slate-900">{{ ind.nama || ind.nama_indikator }}</span>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">Unit: {{ ind.unit_kerja || '-' }}</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Unit: {{ ind.unit_kerja || ind.unit_penanggung_jawab || '-' }}</p>
                                 </td>
                                 <td class="py-4 px-6 text-slate-600">
                                     {{ ind.standar?.nama || '-' }}
                                 </td>
                                 <td class="py-4 px-6 font-bold text-slate-800">
-                                    {{ ind.target }} {{ ind.satuan }}
+                                    {{ ind.target || ind.target_nilai }} {{ ind.satuan || ind.unit_pengukuran }}
                                 </td>
+
+                                <!-- Inline Input Cell -->
                                 <td class="py-4 px-6">
-                                    <span v-if="ind.monitorings && ind.monitorings.length > 0" class="font-bold text-indigo-600">
-                                        {{ ind.monitorings[0].nilai_capaian }} {{ ind.satuan }}
-                                    </span>
-                                    <span v-else class="text-slate-400 italic">Belum diinput</span>
+                                    <div class="flex items-center gap-2">
+                                        <div class="relative flex-1">
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                v-model="inlineValues[ind.id]"
+                                                @blur="saveInline(ind)"
+                                                @keyup.enter="saveInline(ind)"
+                                                placeholder="0.00"
+                                                class="w-full px-3 py-1.5 text-xs rounded-xl border font-bold text-slate-900 transition focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                :class="savedState[ind.id] ? 'bg-emerald-50 border-emerald-400' : 'bg-white border-slate-200'"
+                                            />
+                                        </div>
+                                        <span class="text-[11px] font-semibold text-slate-400">
+                                            {{ ind.satuan || ind.unit_pengukuran }}
+                                        </span>
+                                        <span v-if="savingState[ind.id]" class="text-indigo-600 text-xs animate-spin">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </span>
+                                        <span v-else-if="savedState[ind.id]" class="text-emerald-600 text-xs font-bold">
+                                            <i class="bi bi-check-lg"></i>
+                                        </span>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block mt-0.5">Tekan Enter / Klik luar untuk simpan</span>
                                 </td>
+
+                                <!-- Status Capaian -->
                                 <td class="py-4 px-6">
                                     <span
-                                        v-if="ind.monitorings && ind.monitorings.length > 0"
+                                        v-if="ind.monitorings && ind.monitorings.length > 0 && ind.monitorings[0].nilai_capaian !== null && ind.monitorings[0].nilai_capaian !== ''"
                                         class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
                                         :class="ind.monitorings[0].is_tercapai ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
                                     >
                                         {{ ind.monitorings[0].is_tercapai ? 'Tercapai' : 'Belum Tercapai' }}
                                     </span>
                                     <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
-                                        Belum Ada Data
+                                        Belum Diisi
                                     </span>
                                 </td>
+
+                                <!-- Form Lengkap / Bukti -->
                                 <td class="py-4 px-6 text-right">
                                     <a
                                         :href="`/monitoring/create?indikator_id=${ind.id}&periode_id=${selectedPeriodeId}`"
-                                        class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold transition"
+                                        class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition inline-flex items-center gap-1"
+                                        title="Unggah berkas bukti atau catatan analisa"
                                     >
-                                        Input Realisasi
+                                        <i class="bi bi-paperclip"></i>
+                                        <span>Unggah Bukti</span>
                                     </a>
                                 </td>
                             </tr>
