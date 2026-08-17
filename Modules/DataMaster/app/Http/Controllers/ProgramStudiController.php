@@ -3,37 +3,49 @@
 namespace Modules\DataMaster\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-
 use Modules\DataMaster\Models\ProgramStudi;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ProgramStudiController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ProgramStudi::latest();
+        $query = ProgramStudi::orderBy('jenjang')->orderBy('nama');
 
         if ($request->filled('search')) {
             $q = $request->search;
             $query->where(function ($sq) use ($q) {
-                $sq->where('nama', 'ilike', "%{$q}%")
-                   ->orWhere('kode', 'ilike', "%{$q}%");
+                $sq->where('nama', 'like', "%{$q}%")
+                   ->orWhere('kode', 'like', "%{$q}%");
             });
+        }
+
+        if ($request->filled('jenjang')) {
+            $query->where('jenjang', $request->jenjang);
         }
 
         $program_studis = $query->paginate(15)->withQueryString();
         
         $stats = [
-            'total' => ProgramStudi::count(),
-            'aktif' => ProgramStudi::where('is_aktif', true)->count(),
+            'total'   => ProgramStudi::count(),
+            'aktif'   => ProgramStudi::where('is_aktif', true)->count(),
+            'unggul'  => ProgramStudi::whereIn('akreditasi', ['Unggul', 'A'])->count(),
         ];
 
-        return view('datamaster::program_studi.index', compact('program_studis', 'stats'));
+        return Inertia::render('DataMaster/ProgramStudi/Index', [
+            'program_studis' => $program_studis,
+            'stats'          => $stats,
+            'filters'        => [
+                'search'  => $request->search ?? '',
+                'jenjang' => $request->jenjang ?? '',
+            ],
+        ]);
     }
 
     public function create()
     {
-        return view('datamaster::program_studi.create');
+        return Inertia::render('DataMaster/ProgramStudi/Create');
     }
 
     public function store(Request $request)
@@ -47,7 +59,7 @@ class ProgramStudiController extends Controller
             'is_aktif'   => 'boolean',
         ]);
 
-        $validated['is_aktif'] = $request->has('is_aktif') ? 1 : 0;
+        $validated['is_aktif'] = $request->boolean('is_aktif', true);
 
         ProgramStudi::create($validated);
 
@@ -56,7 +68,9 @@ class ProgramStudiController extends Controller
 
     public function edit(ProgramStudi $program_studi)
     {
-        return view('datamaster::program_studi.edit', compact('program_studi'));
+        return Inertia::render('DataMaster/ProgramStudi/Edit', [
+            'program_studi' => $program_studi,
+        ]);
     }
 
     public function update(Request $request, ProgramStudi $program_studi)
@@ -70,7 +84,7 @@ class ProgramStudiController extends Controller
             'is_aktif'   => 'boolean',
         ]);
 
-        $validated['is_aktif'] = $request->has('is_aktif') ? 1 : 0;
+        $validated['is_aktif'] = $request->boolean('is_aktif');
 
         $program_studi->update($validated);
 
@@ -83,5 +97,3 @@ class ProgramStudiController extends Controller
         return redirect()->route('program-studi.index')->with('success', 'Data Program Studi berhasil dihapus.');
     }
 }
-
-

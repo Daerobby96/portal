@@ -2,22 +2,45 @@
 namespace Modules\DataMaster\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-
 use Modules\DataMaster\Models\Periode;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PeriodeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $periodes = Periode::orderBy('tanggal_mulai', 'desc')
-            ->paginate(10);
-        return view('datamaster::periode.index', compact('periodes'));
+        $query = Periode::orderBy('tahun', 'desc')->orderBy('semester', 'desc');
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function($q) use ($s) {
+                $q->where('nama', 'like', "%{$s}%")
+                  ->orWhere('tahun', 'like', "%{$s}%");
+            });
+        }
+
+        $periodes = $query->paginate(10)->withQueryString();
+
+        $stats = [
+            'total'   => Periode::count(),
+            'aktif'   => Periode::where('is_aktif', true)->count(),
+            'ganjil'  => Periode::where('semester', 'ganjil')->count(),
+            'genap'   => Periode::where('semester', 'genap')->count(),
+        ];
+
+        return Inertia::render('DataMaster/Periode/Index', [
+            'periodes' => $periodes,
+            'stats'    => $stats,
+            'filters'  => [
+                'search' => $request->search ?? '',
+            ],
+        ]);
     }
 
     public function create()
     {
-        return view('datamaster::periode.create');
+        return Inertia::render('DataMaster/Periode/Create');
     }
 
     public function store(Request $request)
@@ -31,7 +54,7 @@ class PeriodeController extends Controller
             'keterangan'      => 'nullable|string',
         ]);
 
-        Periode::create([
+        $periode = Periode::create([
             'nama'            => $request->nama,
             'tahun'           => $request->tahun,
             'semester'        => $request->semester,
@@ -41,13 +64,20 @@ class PeriodeController extends Controller
             'keterangan'      => $request->keterangan,
         ]);
 
+        if ($request->boolean('is_aktif')) {
+            Periode::query()->where('id', '!=', $periode->id)->update(['is_aktif' => false]);
+            $periode->update(['is_aktif' => true]);
+        }
+
         return redirect()->route('periode.index')
             ->with('success', 'Periode "' . $request->nama . '" berhasil ditambahkan.');
     }
 
     public function edit(Periode $periode)
     {
-        return view('datamaster::periode.edit', compact('periode'));
+        return Inertia::render('DataMaster/Periode/Edit', [
+            'periode' => $periode,
+        ]);
     }
 
     public function update(Request $request, Periode $periode)
@@ -70,6 +100,11 @@ class PeriodeController extends Controller
             'keterangan'      => $request->keterangan,
         ]);
 
+        if ($request->boolean('is_aktif')) {
+            Periode::query()->where('id', '!=', $periode->id)->update(['is_aktif' => false]);
+            $periode->update(['is_aktif' => true]);
+        }
+
         return redirect()->route('periode.index')
             ->with('success', 'Periode berhasil diperbarui.');
     }
@@ -80,8 +115,8 @@ class PeriodeController extends Controller
             return back()->with('error', 'Periode aktif tidak dapat dihapus.');
         }
 
-        if ($periode->audits()->count() > 0 || $periode->monitorings()->count() > 0) {
-            return back()->with('error', 'Periode tidak dapat dihapus karena sudah memiliki data terkait.');
+        if (method_exists($periode, 'audits') && $periode->audits()->count() > 0) {
+            return back()->with('error', 'Periode tidak dapat dihapus karena sudah memiliki data audit terkait.');
         }
 
         $periode->delete();
@@ -93,8 +128,9 @@ class PeriodeController extends Controller
     {
         Periode::query()->update(['is_aktif' => false]);
         $periode->update(['is_aktif' => true]);
+        session(['active_periode_id' => $periode->id]);
+
         return redirect()->route('periode.index')
-            ->with('success', 'Periode "' . $periode->nama . '" telah diaktifkan.');
+            ->with('success', 'Periode "' . $periode->nama . '" telah ditetapkan sebagai Periode Aktif.');
     }
 }
-
