@@ -7,6 +7,7 @@ use Modules\Sdm\Models\Lembur;
 use Modules\Sdm\Models\Pegawai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class LemburController extends Controller
 {
@@ -22,63 +23,71 @@ class LemburController extends Controller
             $query->where('pegawai_id', $request->pegawai_id);
         }
 
-        $lemburs = $query->paginate(20)->withQueryString();
-
-        $pegawais = Pegawai::aktif()->orderBy('nama')->get();
+        $lemburs = $query->paginate(15)->withQueryString();
+        $pegawais = Pegawai::where('is_aktif', true)->orderBy('nama')->get();
 
         $stats = [
-            'total' => Lembur::count(),
-            'pending' => Lembur::where('status', 'pending')->count(),
-            'approved' => Lembur::where('status', 'approved')->count(),
+            'total'               => Lembur::count(),
+            'pending'             => Lembur::where('status', 'pending')->count(),
+            'approved'            => Lembur::where('status', 'approved')->count(),
             'total_jam_bulan_ini' => Lembur::where('status', 'approved')
                 ->whereYear('tanggal', now()->year)
                 ->whereMonth('tanggal', now()->month)
-                ->sum('jumlah_jam'),
+                ->sum('jumlah_jam') ?: 0,
         ];
 
-        return view('sdm::lembur.index', compact('lemburs', 'pegawais', 'stats'));
+        return Inertia::render('Sdm/Lembur/Index', [
+            'lemburs'  => $lemburs,
+            'pegawais' => $pegawais,
+            'stats'    => $stats,
+            'filters'  => [
+                'status'     => $request->status ?? '',
+                'pegawai_id' => $request->pegawai_id ?? '',
+            ],
+        ]);
     }
 
     public function create()
     {
-        $pegawais = Pegawai::aktif()->orderBy('nama')->get();
-        return view('sdm::lembur.create', compact('pegawais'));
+        $pegawais = Pegawai::where('is_aktif', true)->orderBy('nama')->get();
+        return Inertia::render('Sdm/Lembur/Create', [
+            'pegawais' => $pegawais,
+        ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'pegawai_id' => 'required|exists:pegawais,id',
-            'tanggal' => 'required|date',
-            'jam_mulai' => 'required|date_format:H:i',
-            'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
-            'keperluan' => 'required|string|max:2000',
+            'pegawai_id'     => 'required|exists:pegawais,id',
+            'tanggal'        => 'required|date',
+            'jam_mulai'      => 'required|string',
+            'jam_selesai'    => 'required|string',
+            'keperluan'      => 'required|string|max:2000',
             'file_pendukung' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $data = $request->all();
         
-        // Calculate jumlah_jam
         $mulai = \Carbon\Carbon::parse($request->jam_mulai);
         $selesai = \Carbon\Carbon::parse($request->jam_selesai);
-        $data['jumlah_jam'] = $mulai->diffInHours($selesai, true);
+        $data['jumlah_jam'] = max(1, $mulai->diffInHours($selesai, true));
+        $data['status'] = 'pending';
 
-        // Upload file if exists
         if ($request->hasFile('file_pendukung')) {
-            $data['file_pendukung'] = $request->file('file_pendukung')
-                ->store('sdm/lembur', 'public');
+            $data['file_pendukung'] = $request->file('file_pendukung')->store('sdm/lembur', 'public');
         }
 
         Lembur::create($data);
 
-        return redirect()->route('lembur.index')
-            ->with('success', 'Pengajuan lembur berhasil dibuat.');
+        return redirect('/sdm/lembur')->with('success', 'Pengajuan lembur berhasil dibuat.');
     }
 
     public function show(Lembur $lembur)
     {
         $lembur->load(['pegawai', 'approvedBy']);
-        return view('sdm::lembur.show', compact('lembur'));
+        return Inertia::render('Sdm/Lembur/Show', [
+            'lembur' => $lembur,
+        ]);
     }
 
     public function destroy(Lembur $lembur)
@@ -88,38 +97,34 @@ class LemburController extends Controller
         }
         
         $lembur->delete();
-        return back()->with('success', 'Data lembur berhasil dihapus.');
+        return redirect('/sdm/lembur')->with('success', 'Data lembur berhasil dihapus.');
     }
 
     public function approve(Request $request, Lembur $lembur)
     {
-        $request->validate([
-            'catatan_approval' => 'nullable|string|max:1000',
-        ]);
-
         $lembur->update([
-            'status' => 'approved',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
+            'status'           => 'approved',
+            'approved_by'      => auth()->id(),
+            'approved_at'      => now(),
             'catatan_approval' => $request->catatan_approval,
         ]);
 
-        return back()->with('success', 'Lembur berhasil disetujui.');
+        return back()->with('success', 'Pengajuan lembur berhasil disetujui.');
     }
 
     public function reject(Request $request, Lembur $lembur)
     {
         $request->validate([
-            'catatan_approval' => 'required|string|max:1000',
+            'alasan_penolakan' => 'required|string|max:1000',
         ]);
 
         $lembur->update([
-            'status' => 'rejected',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-            'catatan_approval' => $request->catatan_approval,
+            'status'           => 'rejected',
+            'approved_by'      => auth()->id(),
+            'approved_at'      => now(),
+            'catatan_approval' => $request->alasan_penolakan,
         ]);
 
-        return back()->with('success', 'Lembur berhasil ditolak.');
+        return back()->with('success', 'Pengajuan lembur ditolak.');
     }
 }

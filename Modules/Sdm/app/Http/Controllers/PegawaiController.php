@@ -10,6 +10,7 @@ use App\Exports\TemplateExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use Inertia\Inertia;
 
 class PegawaiController extends Controller
 {
@@ -20,11 +21,11 @@ class PegawaiController extends Controller
         if ($request->filled('search')) {
             $q = $request->search;
             $query->where(function ($sq) use ($q) {
-                $sq->where('nama', 'ilike', "%{$q}%")
-                   ->orWhere('nip', 'ilike', "%{$q}%")
-                   ->orWhere('email', 'ilike', "%{$q}%")
-                   ->orWhere('unit_kerja', 'ilike', "%{$q}%")
-                   ->orWhere('jabatan', 'ilike', "%{$q}%");
+                $sq->where('nama', 'like', "%{$q}%")
+                   ->orWhere('nip', 'like', "%{$q}%")
+                   ->orWhere('email', 'like', "%{$q}%")
+                   ->orWhere('unit_kerja', 'like', "%{$q}%")
+                   ->orWhere('jabatan', 'like', "%{$q}%");
             });
         }
 
@@ -33,14 +34,14 @@ class PegawaiController extends Controller
         }
 
         if ($request->filled('unit_kerja')) {
-            $query->where('unit_kerja', 'ilike', '%' . $request->unit_kerja . '%');
+            $query->where('unit_kerja', 'like', '%' . $request->unit_kerja . '%');
         }
 
         if ($request->filled('status')) {
             $query->where('is_aktif', $request->status === 'aktif');
         }
 
-        $pegawais = $query->paginate(20)->withQueryString();
+        $pegawais = $query->paginate(15)->withQueryString();
 
         $stats = [
             'total'   => Pegawai::count(),
@@ -56,13 +57,27 @@ class PegawaiController extends Controller
         $roles = \Spatie\Permission\Models\Role::orderBy('name')->get(); 
         $permissions = \Spatie\Permission\Models\Permission::orderBy('name')->get(); 
         
-        return view('sdm::pegawai.index', compact('pegawais', 'stats', 'unitKerjas', 'roles', 'permissions'));
+        return Inertia::render('Sdm/Pegawai/Index', [
+            'pegawais'    => $pegawais,
+            'stats'       => $stats,
+            'unitKerjas'  => $unitKerjas,
+            'roles'       => $roles,
+            'permissions' => $permissions,
+            'filters'     => [
+                'search'     => $request->search ?? '',
+                'jenis'      => $request->jenis ?? '',
+                'unit_kerja' => $request->unit_kerja ?? '',
+                'status'     => $request->status ?? '',
+            ],
+        ]);
     }
 
     public function create()
     {
         $users = User::where('is_active', true)->orderBy('name')->get();
-        return view('sdm::pegawai.create', compact('users'));
+        return Inertia::render('Sdm/Pegawai/Create', [
+            'users' => $users,
+        ]);
     }
 
     public function store(Request $request)
@@ -82,16 +97,27 @@ class PegawaiController extends Controller
         Pegawai::create($request->only([
             'nip', 'nama', 'email', 'no_hp', 'jabatan', 'unit_kerja',
             'jenis_pegawai', 'status_kepegawaian', 'user_id',
-        ]));
+        ]) + ['is_aktif' => true]);
 
-        return redirect()->route('pegawai.index')
+        return redirect('/sdm/pegawai')
             ->with('success', "Pegawai \"{$request->nama}\" berhasil ditambahkan.");
+    }
+
+    public function show(Pegawai $pegawai)
+    {
+        $pegawai->load('user');
+        return Inertia::render('Sdm/Pegawai/Show', [
+            'pegawai' => $pegawai,
+        ]);
     }
 
     public function edit(Pegawai $pegawai)
     {
         $users = User::where('is_active', true)->orderBy('name')->get();
-        return view('sdm::pegawai.edit', compact('pegawai', 'users'));
+        return Inertia::render('Sdm/Pegawai/Edit', [
+            'pegawai' => $pegawai,
+            'users'   => $users,
+        ]);
     }
 
     public function update(Request $request, Pegawai $pegawai)
@@ -113,18 +139,17 @@ class PegawaiController extends Controller
             'jenis_pegawai', 'status_kepegawaian', 'user_id',
         ]) + ['is_aktif' => $request->boolean('is_aktif', true)]);
 
-        return redirect()->route('pegawai.index')
+        return redirect('/sdm/pegawai')
             ->with('success', "Data pegawai \"{$pegawai->nama}\" berhasil diperbarui.");
     }
 
-    
     public function createUser(Request $request, Pegawai $pegawai)
     {
         $request->validate([
-            'password'    => 'required|string|min:8|confirmed',
-            'roles'       => 'nullable|array',
-            'roles.*'     => 'exists:roles,name',
-            'permissions' => 'nullable|array',
+            'password'     => 'required|string|min:8|confirmed',
+            'roles'        => 'nullable|array',
+            'roles.*'      => 'exists:roles,name',
+            'permissions'  => 'nullable|array',
             'permissions.*'=> 'exists:permissions,name',
         ]);
 
@@ -132,7 +157,6 @@ class PegawaiController extends Controller
             return back()->with('error', 'Pegawai ini sudah ditautkan dengan akun User.');
         }
 
-        // Email pegawai is required to create a user account. If null, maybe throw error.
         if (empty($pegawai->email)) {
             return back()->with('error', 'Pegawai ini tidak memiliki email. Silakan edit data pegawai terlebih dahulu.');
         }
@@ -163,7 +187,7 @@ class PegawaiController extends Controller
     public function destroy(Pegawai $pegawai)
     {
         $pegawai->delete();
-        return back()->with('success', "Pegawai \"{$pegawai->nama}\" berhasil dihapus.");
+        return redirect('/sdm/pegawai')->with('success', "Pegawai \"{$pegawai->nama}\" berhasil dihapus.");
     }
 
     public function toggleStatus(Pegawai $pegawai)
@@ -202,7 +226,6 @@ class PegawaiController extends Controller
         );
     }
 
-    // ── AJAX search untuk form peserta rapat ──────────────────────
     public function search(Request $request)
     {
         $q = trim($request->get('q', ''));
@@ -211,14 +234,13 @@ class PegawaiController extends Controller
             return response()->json([]);
         }
 
-        // Gabungkan hasil dari pegawai + user sistem
         $pegawais = Pegawai::where('is_aktif', true)
             ->where(function ($query) use ($q) {
-                $query->where('nama', 'ilike', "%{$q}%")
-                      ->orWhere('nip', 'ilike', "%{$q}%")
-                      ->orWhere('email', 'ilike', "%{$q}%")
-                      ->orWhere('jabatan', 'ilike', "%{$q}%")
-                      ->orWhere('unit_kerja', 'ilike', "%{$q}%");
+                $query->where('nama', 'like', "%{$q}%")
+                      ->orWhere('nip', 'like', "%{$q}%")
+                      ->orWhere('email', 'like', "%{$q}%")
+                      ->orWhere('jabatan', 'like', "%{$q}%")
+                      ->orWhere('unit_kerja', 'like', "%{$q}%");
             })
             ->with('user')
             ->orderBy('nama')
@@ -238,19 +260,17 @@ class PegawaiController extends Controller
                 'tipe'       => $p->user_id ? 'internal' : 'eksternal',
             ]);
 
-        // Tambahkan user aktif yang tidak terdaftar sebagai pegawai
         $pegawaiUserIds = $pegawais->pluck('user_id')->filter()->toArray();
 
         $users = User::where('is_active', true)
             ->whereNotIn('id', $pegawaiUserIds)
             ->where(function ($query) use ($q) {
-                $query->where('name', 'ilike', "%{$q}%")
-                      ->orWhere('nip', 'ilike', "%{$q}%")
-                      ->orWhere('email', 'ilike', "%{$q}%")
-                      ->orWhere('jabatan', 'ilike', "%{$q}%")
-                      ->orWhere('unit_kerja', 'ilike', "%{$q}%");
+                $query->where('name', 'like', "%{$q}%")
+                      ->orWhere('nip', 'like', "%{$q}%")
+                      ->orWhere('email', 'like', "%{$q}%")
+                      ->orWhere('jabatan', 'like', "%{$q}%")
+                      ->orWhere('unit_kerja', 'like', "%{$q}%");
             })
-            
             ->orderBy('name')
             ->limit(5)
             ->get()
@@ -271,6 +291,3 @@ class PegawaiController extends Controller
         return response()->json($pegawais->concat($users)->take(15)->values());
     }
 }
-
-
-

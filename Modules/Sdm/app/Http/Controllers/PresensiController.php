@@ -7,6 +7,7 @@ use Modules\Sdm\Models\Presensi;
 use Modules\Sdm\Models\Pegawai;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Inertia\Inertia;
 
 class PresensiController extends Controller
 {
@@ -27,61 +28,50 @@ class PresensiController extends Controller
         }
 
         $presensis = $query->paginate(20)->withQueryString();
-
-        $pegawais = Pegawai::aktif()->orderBy('nama')->get();
+        $pegawais  = Pegawai::where('is_aktif', true)->orderBy('nama')->get();
 
         $stats = [
             'total_hari_ini' => Presensi::whereDate('tanggal', today())->count(),
             'hadir_hari_ini' => Presensi::whereDate('tanggal', today())->where('status', 'hadir')->count(),
-            'izin_hari_ini' => Presensi::whereDate('tanggal', today())->whereIn('status', ['izin', 'sakit'])->count(),
-            'alpa_hari_ini' => Presensi::whereDate('tanggal', today())->where('status', 'alpa')->count(),
+            'izin_hari_ini'  => Presensi::whereDate('tanggal', today())->whereIn('status', ['izin', 'sakit'])->count(),
+            'alpa_hari_ini'  => Presensi::whereDate('tanggal', today())->where('status', 'alpa')->count(),
         ];
 
-        return view('sdm::presensi.index', compact('presensis', 'pegawais', 'stats'));
+        return Inertia::render('Sdm/Presensi/Index', [
+            'presensis' => $presensis,
+            'pegawais'  => $pegawais,
+            'stats'     => $stats,
+            'filters'   => [
+                'tanggal'    => $request->tanggal ?? '',
+                'pegawai_id' => $request->pegawai_id ?? '',
+                'status'     => $request->status ?? '',
+            ],
+        ]);
     }
 
     public function create()
     {
-        $pegawais = Pegawai::aktif()->orderBy('nama')->get();
-        return view('sdm::presensi.create', compact('pegawais'));
+        $pegawais = Pegawai::where('is_aktif', true)->orderBy('nama')->get();
+        return Inertia::render('Sdm/Presensi/Create', [
+            'pegawais' => $pegawais,
+        ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'pegawai_id' => 'required|exists:pegawais,id',
-            'tanggal' => 'required|date',
-            'jam_masuk' => 'nullable|date_format:H:i',
-            'jam_keluar' => 'nullable|date_format:H:i',
-            'status' => 'required|in:hadir,izin,sakit,alpa,cuti,dinas_luar',
+            'tanggal'    => 'required|date',
+            'jam_masuk'  => 'nullable|string',
+            'jam_keluar' => 'nullable|string',
+            'status'     => 'required|in:hadir,izin,sakit,alpa,cuti,dinas_luar',
             'keterangan' => 'nullable|string|max:1000',
         ]);
 
         Presensi::create($request->all());
 
-        return redirect()->route('presensi.index')
+        return redirect('/sdm/presensi')
             ->with('success', 'Data presensi berhasil ditambahkan.');
-    }
-
-    public function edit(Presensi $presensi)
-    {
-        $pegawais = Pegawai::aktif()->orderBy('nama')->get();
-        return view('sdm::presensi.edit', compact('presensi', 'pegawais'));
-    }
-
-    public function update(Request $request, Presensi $presensi)
-    {
-        $request->validate([
-            'jam_masuk' => 'nullable|date_format:H:i',
-            'jam_keluar' => 'nullable|date_format:H:i',
-            'status' => 'required|in:hadir,izin,sakit,alpa,cuti,dinas_luar',
-            'keterangan' => 'nullable|string|max:1000',
-        ]);
-
-        $presensi->update($request->all());
-
-        return redirect()->route('presensi.index')
-            ->with('success', 'Data presensi berhasil diperbarui.');
     }
 
     public function destroy(Presensi $presensi)
@@ -92,30 +82,34 @@ class PresensiController extends Controller
 
     public function rekap(Request $request)
     {
-        $bulan = $request->get('bulan', now()->month);
-        $tahun = $request->get('tahun', now()->year);
+        $bulan = (int) $request->get('bulan', now()->month);
+        $tahun = (int) $request->get('tahun', now()->year);
 
-        $pegawais = Pegawai::aktif()->with(['user'])->get();
+        $pegawais = Pegawai::where('is_aktif', true)->with('user')->orderBy('nama')->get();
 
         $rekapData = [];
         foreach ($pegawais as $pegawai) {
-            $presensis = Presensi::where('pegawai_id', $pegawai->id)
-                ->whereYear('tanggal', $tahun)
+            $presensiPegawai = Presensi::where('pegawai_id', $pegawai->id)
                 ->whereMonth('tanggal', $bulan)
+                ->whereYear('tanggal', $tahun)
                 ->get();
 
             $rekapData[] = [
-                'pegawai' => $pegawai,
-                'hadir' => $presensis->where('status', 'hadir')->count(),
-                'izin' => $presensis->where('status', 'izin')->count(),
-                'sakit' => $presensis->where('status', 'sakit')->count(),
-                'alpa' => $presensis->where('status', 'alpa')->count(),
-                'cuti' => $presensis->where('status', 'cuti')->count(),
-                'dinas_luar' => $presensis->where('status', 'dinas_luar')->count(),
-                'total' => $presensis->count(),
+                'pegawai'    => $pegawai,
+                'hadir'      => $presensiPegawai->where('status', 'hadir')->count(),
+                'izin'       => $presensiPegawai->where('status', 'izin')->count(),
+                'sakit'      => $presensiPegawai->where('status', 'sakit')->count(),
+                'alpa'       => $presensiPegawai->where('status', 'alpa')->count(),
+                'cuti'       => $presensiPegawai->where('status', 'cuti')->count(),
+                'dinas_luar' => $presensiPegawai->where('status', 'dinas_luar')->count(),
+                'total'      => $presensiPegawai->count(),
             ];
         }
 
-        return view('sdm::presensi.rekap', compact('rekapData', 'bulan', 'tahun'));
+        return Inertia::render('Sdm/Presensi/Rekap', [
+            'rekapData' => $rekapData,
+            'bulan'     => $bulan,
+            'tahun'     => $tahun,
+        ]);
     }
 }
