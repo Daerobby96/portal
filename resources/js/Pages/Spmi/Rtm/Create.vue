@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, nextTick } from 'vue';
+import { ref, nextTick, onMounted } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import axios from 'axios';
@@ -36,30 +36,39 @@ const form = useForm({
 const isGeneratingAi = ref(false);
 const aiGeneratedCount = ref(0);
 
-// Refs for auto-expanding textareas
-const notulensiRef = ref(null);
-const keputusanRef = ref(null);
-const agendaRef = ref(null);
-const keefektifanRef = ref(null);
-const perbaikanRef = ref(null);
-const sumberDayaRef = ref(null);
-
-const resizeTextarea = (el) => {
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = Math.max(el.scrollHeight, 72) + 'px';
+// Global Auto-Expand Directive for all textareas
+const vAutoExpand = {
+    mounted(el) {
+        const resize = () => {
+            el.style.height = 'auto';
+            el.style.height = Math.max(el.scrollHeight + 4, 64) + 'px';
+        };
+        el.style.overflow = 'hidden';
+        el.style.resize = 'none';
+        el.addEventListener('input', resize);
+        el._resize = resize;
+        setTimeout(resize, 50);
+        nextTick(resize);
+    },
+    updated(el) {
+        if (el._resize) {
+            nextTick(el._resize);
+        }
+    }
 };
 
-const handleInputResize = (e) => {
-    resizeTextarea(e.target);
+const triggerResizeAll = () => {
+    nextTick(() => {
+        document.querySelectorAll('textarea').forEach((el) => {
+            el.style.height = 'auto';
+            el.style.height = Math.max(el.scrollHeight + 4, 64) + 'px';
+        });
+    });
 };
 
-// Auto-expand watchers when AI populates fields
-watch(() => form.notulensi, () => nextTick(() => resizeTextarea(notulensiRef.value)));
-watch(() => form.keputusan_manajemen, () => nextTick(() => resizeTextarea(keputusanRef.value)));
-watch(() => form.output_keefektifan, () => nextTick(() => resizeTextarea(keefektifanRef.value)));
-watch(() => form.output_perbaikan, () => nextTick(() => resizeTextarea(perbaikanRef.value)));
-watch(() => form.output_sumber_daya, () => nextTick(() => resizeTextarea(sumberDayaRef.value)));
+onMounted(() => {
+    setTimeout(triggerResizeAll, 100);
+});
 
 const aiGenerateRtmDraft = async () => {
     isGeneratingAi.value = true;
@@ -83,6 +92,7 @@ const aiGenerateRtmDraft = async () => {
             if (d.output_sumber_daya) form.output_sumber_daya = d.output_sumber_daya;
             if (d.keputusan_manajemen) form.keputusan_manajemen = d.keputusan_manajemen;
             aiGeneratedCount.value += 1;
+            setTimeout(triggerResizeAll, 100);
         } else {
             alert(res.data.message || 'Gagal menghasilkan draf RTM dengan AI.');
         }
@@ -106,10 +116,10 @@ const submit = () => {
 
 <template>
     <AuthenticatedLayout>
-        <Head title="Buat Rapat Tinjauan Manajemen (RTM)" />
+        <Head title="Formulir Rapat Tinjauan Manajemen (RTM)" />
 
         <div class="space-y-6">
-            <!-- Top Header Banner -->
+            <!-- Header Banner -->
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-indigo-950/20 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <a href="/rtm" class="text-xs font-semibold text-indigo-300 hover:text-white flex items-center gap-1.5 mb-2.5 transition">
@@ -187,11 +197,9 @@ const submit = () => {
                                     Agenda Pembahasan
                                 </label>
                                 <textarea
-                                    ref="agendaRef"
+                                    v-auto-expand
                                     v-model="form.agenda"
-                                    @input="handleInputResize"
-                                    rows="3"
-                                    class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none"
+                                    class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none font-medium"
                                 ></textarea>
                             </div>
                         </div>
@@ -208,65 +216,71 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">1. Hasil Audit Mutu Internal (AMI)</label>
-                                    <textarea
-                                        v-model="form.input_audit_internal"
-                                        rows="2"
-                                        placeholder="Ringkasan temuan KTS dan kepatuhan standar..."
-                                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                                    ></textarea>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">1. Hasil Audit Mutu Internal (AMI)</label>
+                                        <textarea
+                                            v-auto-expand
+                                            v-model="form.input_audit_internal"
+                                            placeholder="Ringkasan temuan KTS dan kepatuhan standar..."
+                                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none"
+                                        ></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">2. Umpan Balik Kepuasan (Survei / Kuesioner)</label>
+                                        <textarea
+                                            v-auto-expand
+                                            v-model="form.input_umpan_balik"
+                                            placeholder="Indeks kepuasan mahasiswa, tendik, dan dosen..."
+                                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none"
+                                        ></textarea>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">2. Umpan Balik Kepuasan (Survei / Kuesioner)</label>
-                                    <textarea
-                                        v-model="form.input_umpan_balik"
-                                        rows="2"
-                                        placeholder="Indeks kepuasan mahasiswa, tendik, dan dosen..."
-                                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                                    ></textarea>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">3. Kinerja Proses & Capaian IKU</label>
+                                        <textarea
+                                            v-auto-expand
+                                            v-model="form.input_kinerja_proses"
+                                            placeholder="Indikator kinerja yang tercapai dan belum..."
+                                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none"
+                                        ></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">4. Status Tindakan Perbaikan Lalu</label>
+                                        <textarea
+                                            v-auto-expand
+                                            v-model="form.input_status_tindakan"
+                                            placeholder="Progres penyelesaian temuan audit sebelumnya..."
+                                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none"
+                                        ></textarea>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">3. Kinerja Proses & Capaian IKU</label>
-                                    <textarea
-                                        v-model="form.input_kinerja_proses"
-                                        rows="2"
-                                        placeholder="Indikator kinerja yang tercapai dan belum..."
-                                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                                    ></textarea>
-                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">5. Perubahan Sistem Pengelolaan / Regulasi</label>
+                                        <textarea
+                                            v-auto-expand
+                                            v-model="form.input_perubahan_sistem"
+                                            placeholder="Perubahan regulasi Dikti atau kebijakan kampus..."
+                                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none"
+                                        ></textarea>
+                                    </div>
 
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">4. Status Tindakan Perbaikan Lalu</label>
-                                    <textarea
-                                        v-model="form.input_status_tindakan"
-                                        rows="2"
-                                        placeholder="Progres penyelesaian temuan audit sebelumnya..."
-                                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                                    ></textarea>
-                                </div>
-
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">5. Perubahan Sistem Pengelolaan / Regulasi</label>
-                                    <textarea
-                                        v-model="form.input_perubahan_sistem"
-                                        rows="2"
-                                        placeholder="Perubahan regulasi Dikti atau kebijakan kampus..."
-                                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                                    ></textarea>
-                                </div>
-
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">6. Rekomendasi Peningkatan Mutu</label>
-                                    <textarea
-                                        v-model="form.input_rekomendasi"
-                                        rows="2"
-                                        placeholder="Saran perbaikan dari unit atau pimpinan..."
-                                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                                    ></textarea>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">6. Rekomendasi Peningkatan Mutu</label>
+                                        <textarea
+                                            v-auto-expand
+                                            v-model="form.input_rekomendasi"
+                                            placeholder="Saran perbaikan dari unit atau pimpinan..."
+                                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none"
+                                        ></textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -283,10 +297,8 @@ const submit = () => {
                                     Notulensi Jalannya Rapat
                                 </label>
                                 <textarea
-                                    ref="notulensiRef"
+                                    v-auto-expand
                                     v-model="form.notulensi"
-                                    @input="handleInputResize"
-                                    rows="3"
                                     placeholder="Catatan dinamika pembahasan (dapat di-generate otomatis via AI)..."
                                     class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none"
                                 ></textarea>
@@ -297,13 +309,11 @@ const submit = () => {
                                     Keputusan / Kebijakan Strategis Pimpinan <span class="text-rose-500">*</span>
                                 </label>
                                 <textarea
-                                    ref="keputusanRef"
+                                    v-auto-expand
                                     v-model="form.keputusan_manajemen"
-                                    @input="handleInputResize"
-                                    rows="3"
                                     required
                                     placeholder="Instruksi dan keputusan resmi pimpinan terkait perbaikan mutu..."
-                                    class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none font-medium"
+                                    class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none font-medium text-slate-900"
                                 ></textarea>
                             </div>
 
@@ -317,10 +327,8 @@ const submit = () => {
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Rencana Peningkatan Keefektifan SPMI</label>
                                     <textarea
-                                        ref="keefektifanRef"
+                                        v-auto-expand
                                         v-model="form.output_keefektifan"
-                                        @input="handleInputResize"
-                                        rows="2"
                                         class="w-full px-3 py-2 text-xs rounded-xl border border-indigo-200 bg-white leading-relaxed overflow-hidden resize-none"
                                     ></textarea>
                                 </div>
@@ -328,10 +336,8 @@ const submit = () => {
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Rencana Tindakan Korektif & Perbaikan Mutu</label>
                                     <textarea
-                                        ref="perbaikanRef"
+                                        v-auto-expand
                                         v-model="form.output_perbaikan"
-                                        @input="handleInputResize"
-                                        rows="2"
                                         class="w-full px-3 py-2 text-xs rounded-xl border border-indigo-200 bg-white leading-relaxed overflow-hidden resize-none"
                                     ></textarea>
                                 </div>
@@ -339,104 +345,108 @@ const submit = () => {
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Kebutuhan Alokasi Sumber Daya / Anggaran</label>
                                     <textarea
-                                        ref="sumberDayaRef"
+                                        v-auto-expand
                                         v-model="form.output_sumber_daya"
-                                        @input="handleInputResize"
-                                        rows="2"
                                         class="w-full px-3 py-2 text-xs rounded-xl border border-indigo-200 bg-white leading-relaxed overflow-hidden resize-none"
                                     ></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Action Bar -->
+                        <!-- Section 4: Lampiran Absensi -->
+                        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-3">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Unggah Daftar Hadir / Absensi Rapat (PDF / Gambar - Max 5MB)
+                            </label>
+                            <input
+                                type="file"
+                                @change="handleFileChange"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                class="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer border border-slate-200 rounded-2xl p-2"
+                            />
+                        </div>
+
+                        <!-- Submit Buttons -->
                         <div class="flex items-center justify-end gap-3 pt-2">
                             <a
                                 href="/rtm"
-                                class="px-6 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                                class="px-6 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
                             >
                                 Batal
                             </a>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="px-8 py-3 rounded-2xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition disabled:opacity-50 cursor-pointer"
+                                class="px-8 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition disabled:opacity-50 cursor-pointer"
                             >
-                                {{ form.processing ? 'Menyimpan...' : 'Simpan & Publikasikan RTM' }}
+                                {{ form.processing ? 'Menyimpan...' : 'Simpan Notulensi & Keputusan RTM' }}
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- RIGHT COLUMN: Sticky Sidebars & Guidance (4 of 12) -->
+                <!-- RIGHT COLUMN: Sticky Sidebars (4 of 12) -->
                 <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
                     
-                    <!-- Card 1: AI Assistant Status & Quick Prompt -->
-                    <div class="bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-purple-950/20 border border-white/10 space-y-4">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-purple-500/30 border border-purple-400/30 flex items-center justify-center font-bold text-sm">
-                                <i class="bi bi-stars text-purple-300"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-purple-200">AI Quality Copilot</h4>
-                                <p class="text-[11px] text-slate-300">Asisten Perumus RTM</p>
-                            </div>
+                    <!-- AI Assistant Card -->
+                    <div class="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-indigo-950/20 border border-white/10 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/30 text-[11px] font-bold">
+                                <i class="bi bi-robot"></i>
+                                <span>AI Copilot RTM</span>
+                            </span>
+                            <span v-if="aiGeneratedCount > 0" class="text-[10px] text-emerald-300 font-semibold">
+                                ✓ {{ aiGeneratedCount }} Draf Dibuat
+                            </span>
                         </div>
 
-                        <p class="text-xs text-slate-200 leading-relaxed">
-                            AI dapat otomatis menganalisis 6 input bahan rapat dan menyusun draf notulensi, keefektifan, perbaikan, alokasi sumber daya, dan resume keputusan pimpinan.
-                        </p>
+                        <div>
+                            <h4 class="text-sm font-black text-white">Smart RTM Drafter</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                AI akan membaca seluruh 6 bahan masukan rapat untuk merumuskan notulensi dinamika rapat, efektivitas SPMI, dan usulan kebijakan peningkatan mutu.
+                            </p>
+                        </div>
 
                         <button
                             type="button"
                             @click="aiGenerateRtmDraft"
                             :disabled="isGeneratingAi"
-                            class="w-full py-2.5 rounded-xl bg-white text-slate-900 hover:bg-slate-100 text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+                            class="w-full py-2.5 rounded-2xl bg-white text-indigo-950 hover:bg-indigo-50 font-extrabold text-xs transition flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
                         >
-                            <i class="bi bi-magic"></i>
-                            <span>{{ isGeneratingAi ? 'Sedang Merumuskan...' : 'Generate Notulensi & Keputusan' }}</span>
+                            <i class="bi bi-stars text-indigo-600" :class="{ 'animate-spin': isGeneratingAi }"></i>
+                            <span>{{ isGeneratingAi ? 'Sedang Menyusun...' : 'Generate Notulensi & Keputusan' }}</span>
                         </button>
                     </div>
 
-                    <!-- Card 2: Lampiran Berkas Absensi / Dokumentasi -->
-                    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-3">
+                    <!-- Checklist Standar ISO & PPEPP Card -->
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
                         <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                            <i class="bi bi-paperclip text-indigo-600"></i>
-                            <span>Lampiran Daftar Hadir / Absensi</span>
+                            <i class="bi bi-check2-circle text-indigo-600"></i>
+                            <span>Kriteria Wajib RTM (SN-Dikti)</span>
                         </h4>
-                        <p class="text-[11px] text-slate-500">Unggah berkas bukti kehadiran peserta rapat atau foto dokumentasi (PDF/Gambar - Max 5MB).</p>
-                        
-                        <input
-                            type="file"
-                            @change="handleFileChange"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer border border-slate-200 rounded-2xl p-2"
-                        />
-                    </div>
 
-                    <!-- Card 3: Panduan Standar SN-Dikti / PPEPP P4 -->
-                    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-3">
-                        <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                            <i class="bi bi-shield-check text-emerald-600"></i>
-                            <span>Kriteria Keabsahan RTM (SN-Dikti)</span>
-                        </h4>
-                        <ul class="text-[11px] text-slate-600 space-y-2 leading-relaxed">
-                            <li class="flex items-start gap-2">
-                                <i class="bi bi-check2 text-emerald-600 font-bold shrink-0 mt-0.5"></i>
-                                <span>Dipimpin langsung oleh Pimpinan Tertinggi (Rektor / Direktur / Ketua).</span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <i class="bi bi-check2 text-emerald-600 font-bold shrink-0 mt-0.5"></i>
-                                <span>Membahas tuntas temuan KTS hasil Audit Mutu Internal periode aktif.</span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <i class="bi bi-check2 text-emerald-600 font-bold shrink-0 mt-0.5"></i>
-                                <span>Menghasilkan keputusan tertulis peningkatan standar mutu (Pilar P5).</span>
-                            </li>
-                        </ul>
+                        <div class="space-y-2.5 text-xs text-slate-600">
+                            <div class="flex items-start gap-2">
+                                <i class="bi bi-check-lg text-emerald-600 font-bold shrink-0 mt-0.5"></i>
+                                <span>Dipimpin langsung oleh Rektor / Direktur / Pimpinan Unit.</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i class="bi bi-check-lg text-emerald-600 font-bold shrink-0 mt-0.5"></i>
+                                <span>Membahas hasil AMI dan status penyelesaian PTK.</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i class="bi bi-check-lg text-emerald-600 font-bold shrink-0 mt-0.5"></i>
+                                <span>Menghasilkan keputusan tertulis alokasi sumber daya.</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i class="bi bi-check-lg text-emerald-600 font-bold shrink-0 mt-0.5"></i>
+                                <span>Dilampiri bukti absensi kehadiran pimpinan dan LPM.</span>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
+
             </div>
         </div>
     </AuthenticatedLayout>
