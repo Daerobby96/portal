@@ -153,6 +153,6 @@ class SiklusSpmi extends Model
             'evaluasi'  => '#f59e0b',
             'ditutup'   => '#1e293b',
             default     => '#6c757d',
-        ];
+        };
     }
 }
