@@ -13,7 +13,7 @@
     "isEntry": true
   },
   "resources/js/Pages/Demo/VueTest.vue": {
-    "file": "assets/VueTest-CJs96afx.js",
+    "file": "assets/VueTest-DGSd7Vcd.js",
     "name": "VueTest",
     "src": "resources/js/Pages/Demo/VueTest.vue",
     "isDynamicEntry": true,
@@ -22,7 +22,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BKLgZJzH.js",
+    "file": "assets/app-Kbmk9Kqk.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
