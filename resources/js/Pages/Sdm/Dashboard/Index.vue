@@ -96,54 +96,70 @@ const props = defineProps({
                 </div>
             </div>
 
-            <!-- Quick Navigation Menu Tiles -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                <Link href="/sdm/pegawai" class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition text-center group">
-                    <div class="w-10 h-10 mx-auto rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition">
+            <!-- Quick Navigation Menu Tiles (Grid 8) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+                <Link href="/sdm/pegawai" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-purple-300 hover:shadow-md transition text-center group">
+                    <div class="w-9 h-9 mx-auto rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-base mb-1.5 group-hover:scale-110 transition">
                         <i class="bi bi-person-vcard"></i>
                     </div>
-                    <span class="text-xs font-bold text-slate-800 block">Master Pegawai</span>
-                    <span class="text-[10px] text-slate-400">Dosen & Tendik</span>
+                    <span class="text-xs font-bold text-slate-800 block truncate">Pegawai</span>
+                    <span class="text-[9px] text-slate-400">Dosen & Tendik</span>
                 </Link>
 
-                <Link href="/sdm/presensi" class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition text-center group">
-                    <div class="w-10 h-10 mx-auto rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition">
+                <Link href="/periode" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-purple-300 hover:shadow-md transition text-center group">
+                    <div class="w-9 h-9 mx-auto rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-base mb-1.5 group-hover:scale-110 transition">
+                        <i class="bi bi-calendar3"></i>
+                    </div>
+                    <span class="text-xs font-bold text-slate-800 block truncate">Periode</span>
+                    <span class="text-[9px] text-slate-400">Tahun Akademik</span>
+                </Link>
+
+                <Link href="/program-studi" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-purple-300 hover:shadow-md transition text-center group">
+                    <div class="w-9 h-9 mx-auto rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base mb-1.5 group-hover:scale-110 transition">
+                        <i class="bi bi-mortarboard"></i>
+                    </div>
+                    <span class="text-xs font-bold text-slate-800 block truncate">Program Studi</span>
+                    <span class="text-[9px] text-slate-400">Jurusan & Jenjang</span>
+                </Link>
+
+                <Link href="/sdm/presensi" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-purple-300 hover:shadow-md transition text-center group">
+                    <div class="w-9 h-9 mx-auto rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base mb-1.5 group-hover:scale-110 transition">
                         <i class="bi bi-fingerprint"></i>
                     </div>
-                    <span class="text-xs font-bold text-slate-800 block">Presensi Harian</span>
-                    <span class="text-[10px] text-slate-400">Kehadiran & Absen</span>
+                    <span class="text-xs font-bold text-slate-800 block truncate">Presensi</span>
+                    <span class="text-[9px] text-slate-400">Harian & Rekap</span>
                 </Link>
 
-                <Link href="/sdm/cuti" class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition text-center group">
-                    <div class="w-10 h-10 mx-auto rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition">
+                <Link href="/sdm/cuti" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-purple-300 hover:shadow-md transition text-center group">
+                    <div class="w-9 h-9 mx-auto rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-base mb-1.5 group-hover:scale-110 transition">
                         <i class="bi bi-calendar-event"></i>
                     </div>
-                    <span class="text-xs font-bold text-slate-800 block">Manajemen Cuti</span>
-                    <span class="text-[10px] text-slate-400">Izin & Approval</span>
+                    <span class="text-xs font-bold text-slate-800 block truncate">Cuti</span>
+                    <span class="text-[9px] text-slate-400">Izin & Approval</span>
                 </Link>
 
-                <Link href="/sdm/lembur" class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition text-center group">
-                    <div class="w-10 h-10 mx-auto rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition">
+                <Link href="/sdm/lembur" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-purple-300 hover:shadow-md transition text-center group">
+                    <div class="w-9 h-9 mx-auto rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-base mb-1.5 group-hover:scale-110 transition">
                         <i class="bi bi-stopwatch"></i>
                     </div>
-                    <span class="text-xs font-bold text-slate-800 block">Lembur Pegawai</span>
-                    <span class="text-[10px] text-slate-400">SPK & Rekap Jam</span>
+                    <span class="text-xs font-bold text-slate-800 block truncate">Lembur</span>
+                    <span class="text-[9px] text-slate-400">SPK & Rekap Jam</span>
                 </Link>
 
-                <Link href="/sdm/penilaian-kinerja" class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition text-center group">
-                    <div class="w-10 h-10 mx-auto rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition">
+                <Link href="/sdm/penilaian-kinerja" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-purple-300 hover:shadow-md transition text-center group">
+                    <div class="w-9 h-9 mx-auto rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-base mb-1.5 group-hover:scale-110 transition">
                         <i class="bi bi-award"></i>
                     </div>
-                    <span class="text-xs font-bold text-slate-800 block">Penilaian Kinerja</span>
-                    <span class="text-[10px] text-slate-400">SKP & Verifikasi</span>
+                    <span class="text-xs font-bold text-slate-800 block truncate">SKP</span>
+                    <span class="text-[9px] text-slate-400">Kinerja Pegawai</span>
                 </Link>
 
-                <Link href="/sdm/surat-tugas" class="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition text-center group">
-                    <div class="w-10 h-10 mx-auto rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition">
+                <Link href="/sdm/surat-tugas" class="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-purple-300 hover:shadow-md transition text-center group">
+                    <div class="w-9 h-9 mx-auto rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-base mb-1.5 group-hover:scale-110 transition">
                         <i class="bi bi-journal-bookmark"></i>
                     </div>
-                    <span class="text-xs font-bold text-slate-800 block">Surat Tugas</span>
-                    <span class="text-[10px] text-slate-400">Dinas & Pelatihan</span>
+                    <span class="text-xs font-bold text-slate-800 block truncate">Surat Tugas</span>
+                    <span class="text-[9px] text-slate-400">Dinas & Seminar</span>
                 </Link>
             </div>
 
