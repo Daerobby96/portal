@@ -57,7 +57,12 @@ class DokumenController extends Controller
                                    ->where('status', 'approved')->count(),
         ];
 
-        return view('spmi::dokumen.index', compact('dokumens', 'kategoris', 'standars', 'stats'));
+        return \Inertia\Inertia::render('Spmi/Dokumen/Index', [
+            'dokumens' => $dokumens,
+            'kategoris' => $kategoris,
+            'standars' => $standars,
+            'stats' => $stats,
+        ]);
     }
 
     public function create()

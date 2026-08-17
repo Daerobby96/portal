@@ -43,7 +43,11 @@ class AuditController extends Controller
             'selesai' => Audit::where('status', 'selesai')->count(),
         ];
 
-        return view('spmi::audit.index', compact('audits', 'periodes', 'stats'));
+        return \Inertia\Inertia::render('Spmi/Audit/Index', [
+            'audits' => $audits,
+            'periodes' => $periodes,
+            'stats' => $stats,
+        ]);
     }
 
     public function create()

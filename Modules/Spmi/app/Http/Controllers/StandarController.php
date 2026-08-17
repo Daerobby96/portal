@@ -1,11 +1,13 @@
 <?php
-namespace Modules\Spmi\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+namespace Modules\Spmi\Http\Controllers;
+
+use App\Http\Controllers\Controller;
 use Modules\Spmi\Models\Standar;
 use Modules\Spmi\Imports\StandarImport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Inertia\Inertia;
 
 class StandarController extends Controller
 {
@@ -39,14 +41,22 @@ class StandarController extends Controller
             'institusional' => Standar::where('bidang', 'institusional')->where('is_aktif', true)->count(),
         ];
 
-        return view('spmi::standar.index', compact('standars', 'bidangOptions', 'summary'));
+        return Inertia::render('Spmi/Standar/Index', [
+            'standars'      => $standars,
+            'bidangOptions' => $bidangOptions,
+            'summary'       => $summary,
+        ]);
     }
 
     public function create()
     {
         $bidangOptions = Standar::bidangOptions();
-        $jenisOptions = Standar::jenisOptions();
-        return view('spmi::standar.create', compact('bidangOptions', 'jenisOptions'));
+        $jenisOptions  = Standar::jenisOptions();
+
+        return Inertia::render('Spmi/Standar/Create', [
+            'bidangOptions' => $bidangOptions,
+            'jenisOptions'  => $jenisOptions,
+        ]);
     }
 
     public function store(Request $request)
@@ -78,14 +88,22 @@ class StandarController extends Controller
     public function show(Standar $standar)
     {
         $standar->load(['dokumens.kategori', 'indikators']);
-        return view('spmi::standar.show', compact('standar'));
+
+        return Inertia::render('Spmi/Standar/Show', [
+            'standar' => $standar,
+        ]);
     }
 
     public function edit(Standar $standar)
     {
         $bidangOptions = Standar::bidangOptions();
-        $jenisOptions = Standar::jenisOptions();
-        return view('spmi::standar.edit', compact('standar', 'bidangOptions', 'jenisOptions'));
+        $jenisOptions  = Standar::jenisOptions();
+
+        return Inertia::render('Spmi/Standar/Edit', [
+            'standar'       => $standar,
+            'bidangOptions' => $bidangOptions,
+            'jenisOptions'  => $jenisOptions,
+        ]);
     }
 
     public function update(Request $request, Standar $standar)
