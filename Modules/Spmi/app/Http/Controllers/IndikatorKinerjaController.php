@@ -43,14 +43,21 @@ class IndikatorKinerjaController extends Controller
             'custom' => IndikatorKinerja::where('tipe', 'custom')->where('is_aktif', true)->count(),
         ];
 
-        return view('spmi::indikator-kinerja.index', compact('indikators', 'standars', 'summary'));
+        return \Inertia\Inertia::render('Spmi/IndikatorKinerja/Index', [
+            'indikators' => $indikators,
+            'standars'   => $standars,
+            'summary'    => $summary,
+        ]);
     }
 
     public function create()
     {
-        $standars = Standar::where('is_aktif', true)->orderBy('kode')->get();
+        $standars    = Standar::where('is_aktif', true)->orderBy('kode')->get();
         $tipeOptions = IndikatorKinerja::tipeOptions();
-        return view('spmi::indikator-kinerja.create', compact('standars', 'tipeOptions'));
+        return \Inertia\Inertia::render('Spmi/IndikatorKinerja/Create', [
+            'standars'    => $standars,
+            'tipeOptions' => $tipeOptions,
+        ]);
     }
 
     public function store(Request $request)
@@ -95,9 +102,13 @@ class IndikatorKinerjaController extends Controller
 
     public function edit(IndikatorKinerja $indikator_kinerja)
     {
-        $standars = Standar::where('is_aktif', true)->orderBy('kode')->get();
+        $standars    = Standar::where('is_aktif', true)->orderBy('kode')->get();
         $tipeOptions = IndikatorKinerja::tipeOptions();
-        return view('spmi::indikator-kinerja.edit', ['indikator' => $indikator_kinerja, 'standars' => $standars, 'tipeOptions' => $tipeOptions]);
+        return \Inertia\Inertia::render('Spmi/IndikatorKinerja/Edit', [
+            'indikatorKinerja' => $indikator_kinerja,
+            'standars'         => $standars,
+            'tipeOptions'      => $tipeOptions,
+        ]);
     }
 
     public function update(Request $request, IndikatorKinerja $indikator_kinerja)

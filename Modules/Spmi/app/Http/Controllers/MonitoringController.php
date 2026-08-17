@@ -69,14 +69,22 @@ class MonitoringController extends Controller
             'belum_eval' => $indikators->filter(fn($i) => $i->monitorings->isEmpty())->count(),
         ];
 
-        return view('spmi::monitoring.index', compact('indikators', 'periodes', 'stats', 'periodeSel'));
+        return \Inertia\Inertia::render('Spmi/Monitoring/Index', [
+            'indikators' => $indikators,
+            'periodes'   => $periodes,
+            'stats'      => $stats,
+            'periodeSel' => $periodeSel,
+        ]);
     }
 
     public function create()
     {
         $indikators = IndikatorKinerja::where('is_aktif', true)->orderBy('nama')->get();
         $periodes   = Periode::orderByDesc('tahun')->get();
-        return view('spmi::monitoring.create', compact('indikators', 'periodes'));
+        return \Inertia\Inertia::render('Spmi/Monitoring/Create', [
+            'indikators' => $indikators,
+            'periodes'   => $periodes,
+        ]);
     }
 
     public function store(Request $request)

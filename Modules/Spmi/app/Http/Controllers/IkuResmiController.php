@@ -55,7 +55,14 @@ class IkuResmiController extends Controller
         
         $triwulanOptions = IkuHasil::triwulanOptions();
         
-        return view('spmi::iku-resmi.index', compact('ikuList', 'periodes', 'periodeId', 'summary', 'triwulan', 'triwulanOptions'));
+        return \Inertia\Inertia::render('Spmi/IkuResmi/Index', [
+            'ikuList'         => $ikuList,
+            'periodes'        => $periodes,
+            'periodeId'       => $periodeId,
+            'summary'         => $summary,
+            'triwulan'        => $triwulan,
+            'triwulanOptions' => $triwulanOptions,
+        ]);
     }
     
     /**

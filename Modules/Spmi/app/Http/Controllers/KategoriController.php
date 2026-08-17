@@ -10,7 +10,9 @@ class KategoriController extends Controller
     public function index()
     {
         $kategoris = KategoriDokumen::withCount('dokumens')->orderBy('nama')->get();
-        return view('spmi::kategori-dokumen.index', compact('kategoris'));
+        return \Inertia\Inertia::render('Spmi/Kategori/Index', [
+            'kategoris' => $kategoris,
+        ]);
     }
 
     public function create()

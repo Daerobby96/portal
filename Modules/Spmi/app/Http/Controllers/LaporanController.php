@@ -46,7 +46,11 @@ class LaporanController extends Controller
             ],
         ];
         $periodes = Periode::orderByDesc('tahun')->get();
-        return view('spmi::laporan.index', compact('ringkasan', 'periodes', 'periode'));
+        return \Inertia\Inertia::render('Spmi/Laporan/Index', [
+            'ringkasan' => $ringkasan,
+            'periodes'  => $periodes,
+            'periode'   => $periode,
+        ]);
     }
 
     public function audit(Request $request)

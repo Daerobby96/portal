@@ -38,7 +38,11 @@ class IntegrationDashboardController extends Controller
             ->orderBy('semester', 'desc')
             ->get();
 
-        return view('spmi::integration.dashboard', compact('integratedData', 'periode', 'periodes'));
+        return \Inertia\Inertia::render('Spmi/Integration/Dashboard', [
+            'integratedData' => $integratedData,
+            'periode'        => $periode,
+            'periodes'       => $periodes,
+        ]);
     }
 
     /**

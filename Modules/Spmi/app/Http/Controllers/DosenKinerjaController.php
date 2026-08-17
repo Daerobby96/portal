@@ -20,7 +20,11 @@ class DosenKinerjaController extends Controller
             ->orderBy('total_rerata', 'desc')
             ->get();
 
-        return view('spmi::dosen-kinerja.index', compact('kinerjas', 'periodes', 'selectedPeriodeId'));
+        return \Inertia\Inertia::render('Spmi/DosenKinerja/Index', [
+            'kinerjas'          => $kinerjas,
+            'periodes'          => $periodes,
+            'selectedPeriodeId' => $selectedPeriodeId,
+        ]);
     }
 
     public function show(DosenKinerja $kinerja)

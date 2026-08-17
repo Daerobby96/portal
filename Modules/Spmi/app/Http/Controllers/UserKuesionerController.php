@@ -65,7 +65,9 @@ class UserKuesionerController extends Controller
             $k->is_filled_via_cookie = request()->cookie($cookieName) ? true : false;
         }
 
-        return view('spmi::kuesioner.user_list', compact('kuesioners'));
+        return \Inertia\Inertia::render('Spmi/UserKuesioner/Index', [
+            'kuesioners' => $kuesioners,
+        ]);
     }
 
     public function fill(Kuesioner $kuesioner)

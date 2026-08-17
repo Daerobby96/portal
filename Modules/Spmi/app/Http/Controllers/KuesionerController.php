@@ -16,13 +16,17 @@ class KuesionerController extends Controller
     public function index()
     {
         $kuesioners = Kuesioner::with(['periode'])->withCount('jawabans')->latest()->paginate(10);
-        return view('spmi::kuesioner.index', compact('kuesioners'));
+        return \Inertia\Inertia::render('Spmi/Kuesioner/Index', [
+            'kuesioners' => $kuesioners,
+        ]);
     }
 
     public function create()
     {
         $periodes = Periode::orderBy('tahun', 'desc')->get();
-        return view('spmi::kuesioner.create', compact('periodes'));
+        return \Inertia\Inertia::render('Spmi/Kuesioner/Create', [
+            'periodes' => $periodes,
+        ]);
     }
 
     public function store(Request $request)
