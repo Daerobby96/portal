@@ -137,14 +137,16 @@ class LaporanController extends Controller
                     ->latest()
                     ->first();
 
-                $dataPerPeriode[] = $monitoring ? $monitoring->capaian : 0;
+                $dataPerPeriode[] = $monitoring ? (float) ($monitoring->nilai_capaian ?? $monitoring->capaian ?? 0) : 0;
             }
 
             $trendData[] = [
                 'name' => $indikator->nama,
+                'kode' => $indikator->kode,
                 'data' => $dataPerPeriode,
-                'target' => $indikator->target_standar,
-                'bobot' => $indikator->bobot,
+                'target' => $indikator->target_nilai ?? $indikator->target ?? 0,
+                'satuan' => $indikator->unit_pengukuran ?? $indikator->satuan ?? '',
+                'bobot' => $indikator->bobot ?? 0,
             ];
         }
 
