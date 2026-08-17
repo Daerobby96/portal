@@ -69,7 +69,12 @@ class LaporanController extends Controller
             ->pluck('total', 'kategori');
 
         $periodes = Periode::orderByDesc('tahun')->get();
-        return view('spmi::laporan.audit', compact('audits', 'temuanPerKategori', 'periodes', 'periodeId'));
+        return \Inertia\Inertia::render('Spmi/Laporan/Audit', [
+            'audits'            => $audits,
+            'temuanPerKategori' => $temuanPerKategori,
+            'periodes'          => $periodes,
+            'periodeId'         => $periodeId,
+        ]);
     }
 
     public function dokumen(Request $request)
@@ -81,7 +86,11 @@ class LaporanController extends Controller
         $perKategori = $dokumens->groupBy('kategori.nama')->map(fn($g) => $g->count());
         $perStatus = $dokumens->groupBy('status')->map(fn($g) => $g->count());
 
-        return view('spmi::laporan.dokumen', compact('dokumens', 'perKategori', 'perStatus'));
+        return \Inertia\Inertia::render('Spmi/Laporan/Dokumen', [
+            'dokumens'    => $dokumens,
+            'perKategori' => $perKategori,
+            'perStatus'   => $perStatus,
+        ]);
     }
 
     public function monitoring(Request $request)
@@ -97,7 +106,12 @@ class LaporanController extends Controller
             'tidak_tercapai' => $monitorings->filter(fn($m) => !$m->is_tercapai)->count(),
         ]);
 
-        return view('spmi::laporan.monitoring', compact('monitorings', 'periodes', 'periodeId', 'hasilEvaluasi'));
+        return \Inertia\Inertia::render('Spmi/Laporan/Monitoring', [
+            'monitorings'   => $monitorings,
+            'periodes'      => $periodes,
+            'periodeId'     => $periodeId,
+            'hasilEvaluasi' => $hasilEvaluasi,
+        ]);
     }
 
     public function tren(Request $request)
@@ -138,7 +152,12 @@ class LaporanController extends Controller
             return $p->tahun . ' (' . ($p->semester ?? '-') . ')';
         })->toArray();
 
-        return view('spmi::laporan.tren', compact('trendData', 'labels', 'tipeFilter', 'indikators'));
+        return \Inertia\Inertia::render('Spmi/Laporan/Tren', [
+            'trendData'  => $trendData,
+            'labels'     => $labels,
+            'tipeFilter' => $tipeFilter,
+            'indikators' => $indikators,
+        ]);
     }
 
     public function exportPdf(Request $request, string $type)
