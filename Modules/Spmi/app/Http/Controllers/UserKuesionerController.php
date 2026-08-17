@@ -87,7 +87,9 @@ class UserKuesionerController extends Controller
         }
 
         $kuesioner->load('pertanyaans');
-        return view('spmi::kuesioner.fill', compact('kuesioner'));
+        return \Inertia\Inertia::render('Spmi/UserKuesioner/Fill', [
+            'kuesioner' => $kuesioner,
+        ]);
     }
 
     public function submit(Request $request, Kuesioner $kuesioner)

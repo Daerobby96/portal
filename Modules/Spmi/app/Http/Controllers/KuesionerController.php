@@ -73,10 +73,16 @@ class KuesionerController extends Controller
         }
 
         // Sorting for Insights
-        $topThree = collect($analysisList)->sortByDesc('avg')->take(3);
-        $bottomThree = collect($analysisList)->where('total', '>', 0)->sortBy('avg')->take(3);
+        $topThree = collect($analysisList)->sortByDesc('avg')->values()->take(3);
+        $bottomThree = collect($analysisList)->where('total', '>', 0)->sortBy('avg')->values()->take(3);
 
-        return view('spmi::kuesioner.show', compact('kuesioner', 'results', 'groupedQuestions', 'topThree', 'bottomThree'));
+        return \Inertia\Inertia::render('Spmi/Kuesioner/Show', [
+            'kuesioner'        => $kuesioner,
+            'results'          => $results,
+            'groupedQuestions' => $groupedQuestions,
+            'topThree'         => $topThree,
+            'bottomThree'      => $bottomThree,
+        ]);
     }
 
     public function edit(Kuesioner $kuesioner)
