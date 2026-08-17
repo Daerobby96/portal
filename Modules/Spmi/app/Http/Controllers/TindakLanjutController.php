@@ -46,7 +46,10 @@ class TindakLanjutController extends Controller
                                    ->where('batas_tindak_lanjut', '<', now())->count(),
         ];
 
-        return view('spmi::tindak-lanjut.index', compact('temuans', 'stats'));
+        return \Inertia\Inertia::render('Spmi/TindakLanjut/Index', [
+            'temuans' => $temuans,
+            'stats' => $stats,
+        ]);
     }
 
     public function create(Request $request)

@@ -34,7 +34,10 @@ class RtmController extends Controller
             'indikator_total' => \Modules\Spmi\Models\Monitoring::where('periode_id', $periodeId)->count(),
         ];
 
-        return view('spmi::rtm.index', compact('rtms', 'stats'));
+        return \Inertia\Inertia::render('Spmi/Rtm/Index', [
+            'rtms' => $rtms,
+            'stats' => $stats,
+        ]);
     }
 
     public function create()
