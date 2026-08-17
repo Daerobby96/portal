@@ -50,57 +50,37 @@ const toggleGroup = (groupKey) => {
 
 <template>
     <div class="min-h-screen bg-slate-50/50 text-slate-800 font-sans flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
-        <!-- Top Navbar (Ultra-Premium Enterprise Design) -->
+        <!-- Top Navbar -->
         <header class="bg-white/90 border-b border-slate-200/80 sticky top-0 z-30 shadow-xs backdrop-blur-xl transition-all">
             <div class="px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16 items-center gap-4">
                     
-                    <!-- Left: Hamburger & Unified Brand Logo -->
-                    <div class="flex items-center gap-3.5 shrink-0">
+                    <!-- Left: Hamburger & Active Period Indicator -->
+                    <div class="flex items-center gap-3 shrink-0">
                         <button
                             @click="toggleSidebar"
-                            class="hidden md:flex p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer border border-transparent hover:border-slate-200"
-                            title="Toggle Sidebar"
+                            class="hidden md:flex p-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer border border-slate-200/80 shadow-2xs"
+                            title="Sembunyikan / Tampilkan Sidebar"
                         >
-                            <i class="bi bi-list text-xl"></i>
+                            <i class="bi bi-layout-sidebar text-base"></i>
                         </button>
 
                         <button
                             @click="toggleMobileSidebar"
-                            class="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                            class="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer border border-slate-200/80 shadow-2xs"
                             title="Menu"
                         >
                             <i class="bi bi-list text-xl"></i>
                         </button>
 
-                        <!-- Brand Logo -->
-                        <Link href="/dashboard" class="flex items-center gap-3 group">
-                            <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900 flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-600/20 group-hover:scale-105 transition duration-200">
-                                P
-                            </div>
-                            <div class="flex flex-col">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-black text-slate-900 text-base tracking-tight leading-none group-hover:text-indigo-600 transition">
-                                        ERP-POLKA
-                                    </span>
-                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200/60 tracking-wider">
-                                        SPMI PPEPP
-                                    </span>
-                                </div>
-                                <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight tracking-normal">
-                                    Penjaminan Mutu Internal
-                                </span>
-                            </div>
-                        </Link>
-                    </div>
-
-                    <!-- Center: Active Cycle Status Pill (Desktop only) -->
-                    <div class="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-slate-100/70 border border-slate-200/80 text-xs shadow-2xs">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-slate-500 font-medium">Periode Aktif:</span>
-                        <span class="font-extrabold text-slate-900 font-mono">
-                            {{ activePeriode?.nama || (activePeriode?.tahun ? `${activePeriode.tahun} (${activePeriode.semester || '-'})` : 'Tahun Akademik Berjalan') }}
-                        </span>
+                        <!-- Active Period Status Pill -->
+                        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-slate-100/80 border border-slate-200/80 text-xs shadow-2xs">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="text-slate-500 font-medium hidden sm:inline">Periode SPMI:</span>
+                            <span class="font-extrabold text-slate-900 font-mono">
+                                {{ activePeriode?.nama || (activePeriode?.tahun ? `${activePeriode.tahun} (${activePeriode.semester || '-'})` : 'Tahun Akademik Berjalan') }}
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Right: Quick Portal Launcher & User Profile -->
@@ -191,6 +171,28 @@ const toggleGroup = (groupKey) => {
                 v-if="sidebarOpen"
                 class="hidden md:flex flex-col w-72 bg-white border-r border-slate-200/80 shrink-0 p-4 transition-all duration-300 select-none overflow-y-auto"
             >
+                <!-- Brand Logo (Moved to Sidebar Header) -->
+                <div class="flex items-center gap-3 pb-4 mb-3 border-b border-slate-100">
+                    <Link href="/dashboard" class="flex items-center gap-3 group min-w-0">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900 flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-600/20 group-hover:scale-105 transition duration-200 shrink-0">
+                            P
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-black text-slate-900 text-base tracking-tight leading-none group-hover:text-indigo-600 transition">
+                                    ERP-POLKA
+                                </span>
+                                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200/60 tracking-wider">
+                                    SPMI PPEPP
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight truncate">
+                                Penjaminan Mutu Internal
+                            </span>
+                        </div>
+                    </Link>
+                </div>
+
                 <nav class="space-y-1.5 flex-1 text-xs">
                     <!-- Dashboard -->
                     <a
@@ -452,11 +454,14 @@ const toggleGroup = (groupKey) => {
                     @click.stop
                 >
                     <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">P</div>
-                            <span class="font-extrabold text-slate-900">SPMI PPEPP</span>
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-sm">P</div>
+                            <div>
+                                <span class="font-extrabold text-slate-900 text-sm block leading-tight">ERP-POLKA</span>
+                                <span class="text-[10px] font-bold text-indigo-600 uppercase">SPMI PPEPP</span>
+                            </div>
                         </div>
-                        <button @click="mobileSidebarOpen = false" class="p-1 rounded-lg text-slate-400 hover:text-slate-700">
+                        <button @click="mobileSidebarOpen = false" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700">
                             <i class="bi bi-x-lg"></i>
                         </button>
                     </div>
