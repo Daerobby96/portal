@@ -7,10 +7,20 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScanController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // ─── Public Dashboard ──────────────────────────────────────────────
 Route::get('/', [PublicController::class, 'index'])->name('home');
 Route::get('/documents', [PublicController::class, 'documents'])->name('home.documents');
+
+// ─── Proof of Concept: Vue 3 + Inertia ─────────────────────────────
+Route::get('/vue-demo', function () {
+    return Inertia::render('Demo/VueTest', [
+        'message' => 'Selamat datang di ERP-POLKA dengan arsitektur Vue 3 & Inertia.js!',
+        'user' => auth()->user(),
+        'system_time' => now()->translatedFormat('d F Y, H:i:s') . ' WIB',
+    ]);
+})->name('vue.demo');
 
 // ─── Auth ──────────────────────────────────────────────────────────
 Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
