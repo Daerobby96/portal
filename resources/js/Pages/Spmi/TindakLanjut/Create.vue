@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import axios from 'axios';
@@ -22,6 +22,28 @@ const form = useForm({
 
 const isAnalyzingRca = ref(false);
 const isSuggestingAction = ref(false);
+
+// Refs for textareas to trigger auto-resize
+const analisaRef = ref(null);
+const whysRef = ref(null);
+const tindakanRef = ref(null);
+const pencegahanRef = ref(null);
+
+const resizeTextarea = (el) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.max(el.scrollHeight, 80) + 'px';
+};
+
+const handleInputResize = (e) => {
+    resizeTextarea(e.target);
+};
+
+// Watch for programmatic changes (such as AI auto-fill)
+watch(() => form.analisa_penyebab, () => nextTick(() => resizeTextarea(analisaRef.value)));
+watch(() => form.metode_5_whys, () => nextTick(() => resizeTextarea(whysRef.value)));
+watch(() => form.rencana_tindakan, () => nextTick(() => resizeTextarea(tindakanRef.value)));
+watch(() => form.tindakan_pencegahan, () => nextTick(() => resizeTextarea(pencegahanRef.value)));
 
 const aiAnalyzeRootCause = async () => {
     isAnalyzingRca.value = true;
@@ -129,7 +151,7 @@ const submit = () => {
                         </div>
                     </div>
 
-                    <!-- RCA with AI Trigger -->
+                    <!-- RCA with AI Trigger & Auto-expanding Textarea -->
                     <div>
                         <div class="flex items-center justify-between mb-2">
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -146,27 +168,32 @@ const submit = () => {
                             </button>
                         </div>
                         <textarea
+                            ref="analisaRef"
                             v-model="form.analisa_penyebab"
+                            @input="handleInputResize"
                             rows="3"
                             required
                             placeholder="Jelaskan mengapa ketidaksesuaian ini bisa terjadi..."
-                            class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none transition-all"
                         ></textarea>
                     </div>
 
+                    <!-- 5-Whys with Auto-expanding Textarea -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                             Metode Analisa 5-Whys (Opsional)
                         </label>
                         <textarea
+                            ref="whysRef"
                             v-model="form.metode_5_whys"
+                            @input="handleInputResize"
                             rows="3"
                             placeholder="Why 1 -> Why 2 -> Why 3 -> Why 4 -> Why 5 (Akar masalah utama)"
-                            class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none transition-all"
                         ></textarea>
                     </div>
 
-                    <!-- Corrective Action with AI Trigger -->
+                    <!-- Corrective & Preventive Action with Auto-expanding Textareas -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <div class="flex items-center justify-between mb-2">
@@ -184,11 +211,13 @@ const submit = () => {
                                 </button>
                             </div>
                             <textarea
+                                ref="tindakanRef"
                                 v-model="form.rencana_tindakan"
+                                @input="handleInputResize"
                                 rows="3"
                                 required
                                 placeholder="Langkah konkrit yang akan dilakukan..."
-                                class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none transition-all"
                             ></textarea>
                         </div>
 
@@ -197,10 +226,12 @@ const submit = () => {
                                 Tindakan Pencegahan (Preventive Action)
                             </label>
                             <textarea
+                                ref="pencegahanRef"
                                 v-model="form.tindakan_pencegahan"
+                                @input="handleInputResize"
                                 rows="3"
                                 placeholder="Langkah agar masalah serupa tidak terulang kembali..."
-                                class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                class="w-full px-4 py-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed overflow-hidden resize-none transition-all"
                             ></textarea>
                         </div>
                     </div>
