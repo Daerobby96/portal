@@ -49,6 +49,7 @@ const getColorClasses = (color) => {
         emerald: 'from-emerald-500 to-emerald-600 text-emerald-600 bg-emerald-50 border-emerald-100 hover:border-emerald-300',
         amber: 'from-amber-500 to-amber-600 text-amber-600 bg-amber-50 border-amber-100 hover:border-amber-300',
         cyan: 'from-cyan-500 to-cyan-600 text-cyan-600 bg-cyan-50 border-cyan-100 hover:border-cyan-300',
+        purple: 'from-purple-600 to-indigo-700 text-purple-600 bg-purple-50 border-purple-100 hover:border-purple-300',
         violet: 'from-violet-500 to-violet-600 text-violet-600 bg-violet-50 border-violet-100 hover:border-violet-300',
         pink: 'from-pink-500 to-pink-600 text-pink-600 bg-pink-50 border-pink-100 hover:border-pink-300',
         rose: 'from-rose-500 to-rose-600 text-rose-600 bg-rose-50 border-rose-100 hover:border-rose-300',
@@ -60,6 +61,7 @@ const getColorClasses = (color) => {
 const getIconGradient = (color) => {
     const gradients = {
         indigo: 'from-indigo-600 to-indigo-700 text-white shadow-indigo-200',
+        purple: 'from-purple-600 to-indigo-700 text-white shadow-purple-200',
         sky: 'from-sky-500 to-sky-600 text-white shadow-sky-200',
         blue: 'from-blue-600 to-blue-700 text-white shadow-blue-200',
         slate: 'from-slate-700 to-slate-800 text-white shadow-slate-200',
