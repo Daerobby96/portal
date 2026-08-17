@@ -51,7 +51,7 @@ class HandleInertiaRequests extends Middleware
                 'warning' => fn () => $request->session()->get('warning'),
                 'info' => fn () => $request->session()->get('info'),
             ],
-            'active_periode' => fn () => $request->session()->get('active_periode_id'),
+            'active_periode' => fn () => \Modules\DataMaster\Models\Periode::where('is_aktif', true)->select('id', 'nama', 'tahun', 'semester')->first(),
         ]);
     }
 }
