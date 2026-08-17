@@ -47,6 +47,15 @@ const formatDate = (dateStr) => {
     }
     return dateStr;
 };
+
+const getPeranLabel = (peran) => {
+    const map = {
+        'ketua': 'Ketua Tim',
+        'anggota': 'Anggota Tim',
+        'penanggung_jawab': 'Penanggung Jawab',
+    };
+    return map[peran] || peran || 'Anggota';
+};
 </script>
 
 <template>
@@ -136,7 +145,7 @@ const formatDate = (dateStr) => {
                                         <p class="text-[11px] text-slate-400 font-mono">{{ p.nip || 'No NIP' }} | {{ p.unit_kerja }}</p>
                                     </div>
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
-                                        {{ p.pivot?.peran || 'Anggota' }}
+                                        {{ getPeranLabel(p.pivot?.peran) }}
                                     </span>
                                 </div>
                             </div>

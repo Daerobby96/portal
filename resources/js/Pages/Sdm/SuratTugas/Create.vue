@@ -27,7 +27,7 @@ const form = useForm({
 const addPegawai = (pegawaiId) => {
     if (!form.pegawai_ids.includes(pegawaiId)) {
         form.pegawai_ids.push(pegawaiId);
-        form.peran.push(form.pegawai_ids.length === 1 ? 'Ketua Tim' : 'Anggota');
+        form.peran.push(form.pegawai_ids.length === 1 ? 'ketua' : 'anggota');
     }
 };
 
@@ -187,16 +187,19 @@ const submit = () => {
                                         <span class="font-bold text-slate-900 flex-1">
                                             {{ pegawais.find(p => p.id === id)?.nama }}
                                         </span>
-                                        <input
+                                        <select
                                             v-model="form.peran[idx]"
-                                            type="text"
-                                            placeholder="Peran (Ketua / Anggota)"
-                                            class="px-3 py-1 text-xs rounded-lg border border-slate-200 w-32 font-medium"
-                                        />
+                                            class="px-3 py-1.5 text-xs rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:ring-2 focus:ring-indigo-500"
+                                        >
+                                            <option value="ketua">Ketua Tim</option>
+                                            <option value="anggota">Anggota Tim</option>
+                                            <option value="penanggung_jawab">Penanggung Jawab</option>
+                                        </select>
                                         <button
                                             type="button"
                                             @click="removePegawai(idx)"
-                                            class="p-1 rounded-lg text-rose-500 hover:bg-rose-50"
+                                            class="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 transition"
+                                            title="Hapus"
                                         >
                                             <i class="bi bi-trash3"></i>
                                         </button>

@@ -89,8 +89,17 @@ class SuratTugasController extends Controller
 
             $pegawaiData = [];
             foreach ($request->pegawai_ids as $index => $pegawaiId) {
+                $rawPeran = strtolower(trim($request->peran[$index] ?? 'anggota'));
+                if (str_contains($rawPeran, 'ketua')) {
+                    $cleanPeran = 'ketua';
+                } elseif (str_contains($rawPeran, 'tanggung') || str_contains($rawPeran, 'pj')) {
+                    $cleanPeran = 'penanggung_jawab';
+                } else {
+                    $cleanPeran = 'anggota';
+                }
+
                 $pegawaiData[$pegawaiId] = [
-                    'peran' => $request->peran[$index] ?? 'anggota',
+                    'peran' => $cleanPeran,
                 ];
             }
             $suratTugas->pegawais()->attach($pegawaiData);
