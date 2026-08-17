@@ -44,6 +44,20 @@ const rejectCuti = (c) => {
         router.post(`/sdm/cuti/${c.id}/reject`, { alasan_penolakan: alasan });
     }
 };
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const cleanStr = String(dateStr).split('T')[0];
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+        const year = parts[0];
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${day < 10 ? '0' + day : day} ${months[month - 1] || ''} ${year}`;
+    }
+    return dateStr;
+};
 </script>
 
 <template>
@@ -186,8 +200,8 @@ const rejectCuti = (c) => {
                                 <td class="py-4 px-4 capitalize font-semibold text-slate-800">
                                     {{ c.jenis_cuti?.replace('_', ' ') }}
                                 </td>
-                                <td class="py-4 px-4 text-slate-600 font-medium">
-                                    {{ c.tanggal_mulai }} s.d. {{ c.tanggal_selesai }}
+                                <td class="py-4 px-4 text-slate-600 font-medium font-mono text-[11px]">
+                                    {{ formatDate(c.tanggal_mulai) }} s.d. {{ formatDate(c.tanggal_selesai) }}
                                 </td>
                                 <td class="py-4 px-4 text-center font-bold text-indigo-700 font-mono">
                                     {{ c.jumlah_hari }} hari

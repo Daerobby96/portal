@@ -35,6 +35,20 @@ const deletePeriode = (p) => {
         router.delete(`/periode/${p.id}`);
     }
 };
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const cleanStr = String(dateStr).split('T')[0];
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+        const year = parts[0];
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${day < 10 ? '0' + day : day} ${months[month - 1] || ''} ${year}`;
+    }
+    return dateStr;
+};
 </script>
 
 <template>
@@ -163,7 +177,7 @@ const deletePeriode = (p) => {
                                     </span>
                                 </td>
                                 <td class="py-4 px-4 text-slate-600">
-                                    <div class="font-medium text-[11px]">{{ p.tanggal_mulai }} s.d. {{ p.tanggal_selesai }}</div>
+                                    <div class="font-medium text-[11px] font-mono">{{ formatDate(p.tanggal_mulai) }} s.d. {{ formatDate(p.tanggal_selesai) }}</div>
                                 </td>
                                 <td class="py-4 px-4 text-center">
                                     <span

@@ -33,6 +33,20 @@ const rejectSurat = () => {
         router.post(`/sdm/surat-tugas/${props.suratTugas.id}/reject`, { alasan_penolakan: alasan });
     }
 };
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const cleanStr = String(dateStr).split('T')[0];
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+        const year = parts[0];
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${day < 10 ? '0' + day : day} ${months[month - 1] || ''} ${year}`;
+    }
+    return dateStr;
+};
 </script>
 
 <template>
@@ -62,7 +76,7 @@ const rejectSurat = () => {
                         {{ suratTugas.perihal }}
                     </h1>
                     <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
-                        Tujuan: {{ suratTugas.tempat_tujuan }} ({{ suratTugas.tanggal_mulai }} s.d. {{ suratTugas.tanggal_selesai }}).
+                        Tujuan: {{ suratTugas.tempat_tujuan }} ({{ formatDate(suratTugas.tanggal_mulai) }} s.d. {{ formatDate(suratTugas.tanggal_selesai) }}).
                     </p>
                 </div>
 
@@ -104,7 +118,7 @@ const rejectSurat = () => {
 
                             <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1 sm:col-span-2">
                                 <span class="text-slate-400 font-medium">Rentang Waktu Kedinasan</span>
-                                <p class="font-bold text-indigo-700 text-sm font-mono">{{ suratTugas.tanggal_mulai }} s.d. {{ suratTugas.tanggal_selesai }}</p>
+                                <p class="font-bold text-indigo-700 text-sm font-mono">{{ formatDate(suratTugas.tanggal_mulai) }} s.d. {{ formatDate(suratTugas.tanggal_selesai) }}</p>
                             </div>
                         </div>
 

@@ -51,6 +51,20 @@ const getStatusBadge = (st) => {
     };
     return map[st] || 'bg-slate-50 text-slate-700 border-slate-200';
 };
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const cleanStr = String(dateStr).split('T')[0];
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+        const year = parts[0];
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${day < 10 ? '0' + day : day} ${months[month - 1] || ''} ${year}`;
+    }
+    return dateStr;
+};
 </script>
 
 <template>
@@ -189,8 +203,8 @@ const getStatusBadge = (st) => {
                                 <td class="py-4 px-4 text-slate-700 font-semibold">
                                     {{ s.tempat_tujuan }}
                                 </td>
-                                <td class="py-4 px-4 text-slate-600 text-[11px]">
-                                    {{ s.tanggal_mulai }} s.d. {{ s.tanggal_selesai }}
+                                <td class="py-4 px-4 text-slate-600 text-[11px] font-mono">
+                                    {{ formatDate(s.tanggal_mulai) }} s.d. {{ formatDate(s.tanggal_selesai) }}
                                 </td>
                                 <td class="py-4 px-4 text-center">
                                     <span

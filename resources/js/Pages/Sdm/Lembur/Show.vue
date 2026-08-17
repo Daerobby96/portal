@@ -19,6 +19,20 @@ const rejectLembur = () => {
         router.post(`/sdm/lembur/${props.lembur.id}/reject`, { alasan_penolakan: alasan });
     }
 };
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const cleanStr = String(dateStr).split('T')[0];
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+        const year = parts[0];
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${day < 10 ? '0' + day : day} ${months[month - 1] || ''} ${year}`;
+    }
+    return dateStr;
+};
 </script>
 
 <template>
@@ -86,7 +100,7 @@ const rejectLembur = () => {
 
                             <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
                                 <span class="text-slate-400 font-medium">Tanggal & Waktu Lembur</span>
-                                <p class="font-bold text-indigo-700 text-sm font-mono">{{ lembur.tanggal }} ({{ lembur.jam_mulai }} - {{ lembur.jam_selesai }})</p>
+                                <p class="font-bold text-indigo-700 text-sm font-mono">{{ formatDate(lembur.tanggal) }} ({{ lembur.jam_mulai }} - {{ lembur.jam_selesai }})</p>
                                 <span class="text-[11px] text-slate-500 font-mono">Total {{ lembur.jumlah_jam }} Jam</span>
                             </div>
                         </div>

@@ -10,8 +10,8 @@ const form = useForm({
     nama: props.periode.nama,
     tahun: props.periode.tahun,
     semester: props.periode.semester,
-    tanggal_mulai: props.periode.tanggal_mulai,
-    tanggal_selesai: props.periode.tanggal_selesai,
+    tanggal_mulai: props.periode.tanggal_mulai ? String(props.periode.tanggal_mulai).split('T')[0] : '',
+    tanggal_selesai: props.periode.tanggal_selesai ? String(props.periode.tanggal_selesai).split('T')[0] : '',
     is_aktif: Boolean(props.periode.is_aktif),
     keterangan: props.periode.keterangan || '',
 });
