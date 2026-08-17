@@ -93,6 +93,14 @@ const syncSiakad = () => {
         router.post('/monitoring/sync-siakad');
     }
 };
+
+const syncErp = () => {
+    if (confirm('Apakah Anda ingin menyinkronkan realisasi indikator dari seluruh basis data Modul ERP terintegrasi (Mahasiswa, SDM Dosen, Riset LPPM, Kerjasama)?')) {
+        router.post('/monitoring/sync-erp', {
+            periode_id: selectedPeriodeId.value,
+        });
+    }
+};
 </script>
 
 <template>
@@ -111,11 +119,18 @@ const syncSiakad = () => {
                         Monitoring Indikator Mutu (IKU / IKT)
                     </h1>
                     <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
-                        Pengisian capaian realisasi secara <strong>Live Inline</strong> langsung pada tabel instrumen mutu.
+                        Pengisian capaian realisasi secara <strong>Live Inline</strong> langsung pada tabel instrumen mutu atau sinkronisasi otomatis dari ERP.
                     </p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                    <button
+                        @click="syncErp"
+                        class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-purple-600/30 cursor-pointer"
+                    >
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        <span>⚡ Sinkronisasi ERP</span>
+                    </button>
                     <button
                         @click="syncSiakad"
                         class="px-4 py-2.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold border border-white/20 transition flex items-center gap-1.5 shadow-xs cursor-pointer"
@@ -128,7 +143,7 @@ const syncSiakad = () => {
                         class="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30"
                     >
                         <i class="bi bi-plus-lg"></i>
-                        <span>Input Form Lengkap</span>
+                        <span>Input Form</span>
                     </a>
                 </div>
             </div>

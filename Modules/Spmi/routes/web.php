@@ -77,6 +77,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Monitoring & Evaluasi ──────────────────────────────────────
     Route::middleware('role:super_admin,auditor,auditee,pimpinan')->group(function () {
+        Route::post('monitoring/sync-erp', [MonitoringController::class, 'syncErp'])->name('monitoring.sync-erp');
         Route::post('monitoring/sync-siakad', [MonitoringController::class, 'syncSiakad'])->name('monitoring.sync-siakad');
         Route::get('monitoring/template', [MonitoringController::class, 'downloadTemplate'])->name('monitoring.template');
         Route::post('monitoring/import', [MonitoringController::class, 'import'])->name('monitoring.import');

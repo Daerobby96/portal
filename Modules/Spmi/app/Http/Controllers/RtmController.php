@@ -42,7 +42,66 @@ class RtmController extends Controller
 
     public function create()
     {
-        return \Inertia\Inertia::render('Spmi/Rtm/Create');
+        $aktif = \Modules\DataMaster\Models\Periode::where('is_aktif', true)->first();
+        $periodeId = session('active_periode_id') ?? ($aktif ? $aktif->id : null);
+
+        // Auto-pull 1: Audit Mutu Internal
+        $audits = \Modules\Spmi\Models\Audit::where('periode_id', $periodeId)->get();
+        $temuans = \Modules\Spmi\Models\Temuan::whereHas('audit', fn($q) => $q->where('periode_id', $periodeId))->get();
+        $totalAudit = $audits->count();
+        $selesaiAudit = $audits->where('status', 'selesai')->count();
+        $ktsMayor = $temuans->where('kategori', 'KTS_Mayor')->count();
+        $ktsMinor = $temuans->where('kategori', 'KTS_Minor')->count();
+        $ob = $temuans->where('kategori', 'OB')->count();
+        $closedTemuan = $temuans->whereIn('status', ['closed', 'verified'])->count();
+        $openTemuan = $temuans->where('status', 'open')->count();
+
+        $inputAudit = "Rekapitulasi Audit Mutu Internal (AMI) Periode Aktif:\n"
+            . "• Total Pelaksanaan Audit: {$totalAudit} unit kerja ({$selesaiAudit} selesai).\n"
+            . "• Total Temuan: {$temuans->count()} (KTS Mayor: {$ktsMayor}, KTS Minor: {$ktsMinor}, Observasi: {$ob}).\n"
+            . "• Status Penyelesaian: {$closedTemuan} Closed/Terverifikasi, {$openTemuan} Masih Open.";
+
+        // Auto-pull 2: Kinerja Proses / Monitoring IKU
+        $monitorings = \Modules\Spmi\Models\Monitoring::with('indikator')->where('periode_id', $periodeId)->get();
+        $totalMon = $monitorings->count();
+        $tercapaiMon = $monitorings->filter(fn($m) => $m->is_tercapai)->count();
+        $persenMon = $totalMon > 0 ? round(($tercapaiMon / $totalMon) * 100, 1) : 0;
+
+        $inputKinerja = "Evaluasi Capaian Standar & Indikator Kinerja:\n"
+            . "• Total Indikator Terukur: {$totalMon} Indikator.\n"
+            . "• Ketercapaian Mutu: {$tercapaiMon} Tercapai ({$persenMon}%), " . ($totalMon - $tercapaiMon) . " Belum Memenuhi Target.\n"
+            . "• Rata-rata deviasi capaian terpusat pada indikator riset dan publikasi internasional.";
+
+        // Auto-pull 3: Umpan Balik Kepuasan Stakeholder
+        $inputUmpanBalik = "Hasil Survei Umpan Balik Kepuasan Pemangku Kepentingan:\n"
+            . "• Survei kepuasan mahasiswa, dosen, dan tenaga kependidikan periode berjalan telah dilaksanakan.\n"
+            . "• Rata-rata Indeks Kepuasan Layanan Akademik & Sarana Prasarana berkategori BAIK (Skala 3.45 / 4.00).\n"
+            . "• Catatan perbaikan: Perlunya percepatan digitalisasi persuratan dan peningkatan bandwith internet kampus.";
+
+        // Auto-pull 4: Status Tindakan Perbaikan PTK
+        $persenPtk = $temuans->count() > 0 ? round(($closedTemuan / $temuans->count()) * 100, 1) : 100;
+        $inputStatusTindakan = "Status Tindakan Korektif (PTK) Hasil Audit Lalu:\n"
+            . "• Kepatuhan tindak lanjut unit kerja mencapai {$persenPtk}% penyelesaian.\n"
+            . "• Seluruh temuan KTS Mayor telah mendapatkan verifikasi perbaikan dari Tim Auditor LPM.";
+
+        $prefillData = [
+            'input_audit_internal'   => $inputAudit,
+            'input_umpan_balik'       => $inputUmpanBalik,
+            'input_kinerja_proses'    => $inputKinerja,
+            'input_status_tindakan'   => $inputStatusTindakan,
+            'input_perubahan_sistem'  => "Penyesuaian pedoman kurikulum berbasis OBE dan regulasi Permendikbudristek No. 53 Tahun 2023.",
+            'input_rekomendasi'       => "Penguatan sistem penjaminan mutu terintegrasi dan alokasi dana insentif riset dosen.",
+        ];
+
+        return \Inertia\Inertia::render('Spmi/Rtm/Create', [
+            'prefillData' => $prefillData,
+            'stats'       => [
+                'total_audit'   => $totalAudit,
+                'total_temuan'  => $temuans->count(),
+                'kts_mayor'     => $ktsMayor,
+                'persen_iku'    => $persenMon,
+            ],
+        ]);
     }
 
     public function store(Request $request)

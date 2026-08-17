@@ -4,16 +4,27 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import axios from 'axios';
 
+const props = defineProps({
+    prefillData: {
+        type: Object,
+        default: () => ({}),
+    },
+    stats: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
 const form = useForm({
     judul_rapat: 'Rapat Tinjauan Manajemen (RTM) Siklus Mutu',
     tanggal_rapat: new Date().toISOString().split('T')[0],
-    agenda: '1. Evaluasi Hasil AMI\n2. Umpan Balik Kepuasan Mahasiswa & Dosen\n3. Keputusan Peningkatan Standar',
-    input_audit_internal: '',
-    input_umpan_balik: '',
-    input_kinerja_proses: '',
-    input_status_tindakan: '',
-    input_perubahan_sistem: '',
-    input_rekomendasi: '',
+    agenda: '1. Evaluasi Hasil AMI & Temuan KTS\n2. Umpan Balik Kepuasan Mahasiswa & Dosen\n3. Evaluasi Capaian IKU/IKT\n4. Keputusan Strategis Peningkatan Mutu',
+    input_audit_internal: props.prefillData?.input_audit_internal || '',
+    input_umpan_balik: props.prefillData?.input_umpan_balik || '',
+    input_kinerja_proses: props.prefillData?.input_kinerja_proses || '',
+    input_status_tindakan: props.prefillData?.input_status_tindakan || '',
+    input_perubahan_sistem: props.prefillData?.input_perubahan_sistem || 'Penyesuaian pedoman kurikulum berbasis OBE dan regulasi Permendikbudristek No. 53 Tahun 2023.',
+    input_rekomendasi: props.prefillData?.input_rekomendasi || 'Penguatan sistem penjaminan mutu terintegrasi dan alokasi dana insentif riset dosen.',
     notulensi: '',
     output_keefektifan: '',
     output_perbaikan: '',

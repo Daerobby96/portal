@@ -14,6 +14,71 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class MonitoringController extends Controller
 {
+    public function syncErp(Request $request, \Modules\Spmi\Services\ModuleIntegrationService $integrationService)
+    {
+        $periode = Periode::find($request->periode_id) ?? Periode::aktif();
+        if (!$periode) {
+            return redirect()->back()->with('error', 'Tidak ada periode mutu yang aktif.');
+        }
+
+        $allData = $integrationService->getAllIntegratedData($periode->id);
+        $syncCount = 0;
+
+        // Ambil semua indikator aktif
+        $indikators = IndikatorKinerja::where('is_aktif', true)->get();
+
+        foreach ($indikators as $ind) {
+            $namaLower = strtolower($ind->nama . ' ' . $ind->kode);
+            $val = null;
+
+            // 1. Dosen / SDM
+            if (str_contains($namaLower, 'dosen s3') || str_contains($namaLower, 'doktor')) {
+                $val = $allData['pegawai']['dosen_s3'] ?? 0;
+            } elseif (str_contains($namaLower, 'lektor kepala') || str_contains($namaLower, 'guru besar')) {
+                $val = $allData['pegawai']['lektor_kepala'] ?? 0;
+            } elseif (str_contains($namaLower, 'jumlah dosen') || str_contains($namaLower, 'dosen tetap')) {
+                $val = $allData['pegawai']['dosen'] ?? 0;
+            }
+            // 2. Mahasiswa
+            elseif (str_contains($namaLower, 'mahasiswa aktif') || str_contains($namaLower, 'jumlah mahasiswa')) {
+                $val = $allData['mahasiswa']['aktif'] ?? 0;
+            }
+            // 3. Riset & Publikasi
+            elseif (str_contains($namaLower, 'publikasi') || str_contains($namaLower, 'jurnal') || str_contains($namaLower, 'artikel')) {
+                $val = $allData['publikasi']['total'] ?? 0;
+            } elseif (str_contains($namaLower, 'penelitian') || str_contains($namaLower, 'riset')) {
+                $val = $allData['penelitian']['total'] ?? 0;
+            } elseif (str_contains($namaLower, 'pengabdian') || str_contains($namaLower, 'pkm')) {
+                $val = $allData['pengabdian']['total'] ?? 0;
+            } elseif (str_contains($namaLower, 'hki') || str_contains($namaLower, 'paten') || str_contains($namaLower, 'hak cipta')) {
+                $val = $allData['hki']['total'] ?? 0;
+            }
+            // 4. Kerjasama
+            elseif (str_contains($namaLower, 'kerjasama') || str_contains($namaLower, 'mou') || str_contains($namaLower, 'moa')) {
+                $val = $allData['kerjasama']['total'] ?? 0;
+            }
+
+            if ($val !== null) {
+                Monitoring::updateOrCreate(
+                    [
+                        'indikator_id' => $ind->id,
+                        'periode_id'   => $periode->id,
+                    ],
+                    [
+                        'nilai_capaian' => $val,
+                        'tanggal_input' => now()->toDateString(),
+                        'keterangan'    => 'Sinkronisasi otomatis dari basis data Modul ERP terintegrasi.',
+                        'status'        => 'verified',
+                        'user_id'       => Auth::id() ?? 1,
+                    ]
+                );
+                $syncCount++;
+            }
+        }
+
+        return redirect()->back()->with('success', "Berhasil menyinkronkan {$syncCount} data realisasi indikator dari modul ERP terintegrasi.");
+    }
+
     public function syncSiakad(SiakadService $siakadService)
     {
         $result = $siakadService->syncAcademicIndicators();
