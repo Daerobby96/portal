@@ -3,144 +3,131 @@
 namespace Modules\ManajemenAset\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Modules\ManajemenAset\Models\Ruangan;
+use Modules\DataMaster\Models\Ruangan;
 use Modules\DataMaster\Models\ProgramStudi;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class RuanganController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Ruangan::with('prodi');
+        $query = Ruangan::with('prodi')->orderBy('gedung')->orderBy('kode_ruangan');
+
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->where(function ($sq) use ($q) {
+                $sq->where('nama_ruangan', 'ilike', "%{$q}%")
+                   ->orWhere('kode_ruangan', 'ilike', "%{$q}%")
+                   ->orWhere('gedung', 'ilike', "%{$q}%")
+                   ->orWhere('lantai', 'ilike', "%{$q}%");
+            });
+        }
 
         if ($request->filled('jenis')) {
             $query->where('jenis', $request->jenis);
-        }
-
-        if ($request->filled('prodi_id')) {
-            $query->where('prodi_id', $request->prodi_id);
         }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('nama_ruangan', 'like', '%' . $request->search . '%')
-                  ->orWhere('kode_ruangan', 'like', '%' . $request->search . '%')
-                  ->orWhere('gedung', 'like', '%' . $request->search . '%');
-            });
-        }
-
-        $ruangans = $query->orderBy('kode_ruangan')->paginate($request->get('per_page', 15));
-        $prodis = ProgramStudi::orderBy('nama')->get();
+        $ruangans = $query->paginate(15)->withQueryString();
+        $prodis = ProgramStudi::where('is_aktif', true)->orderBy('nama')->get(['id', 'nama', 'jenjang']);
 
         $stats = [
-            'total' => Ruangan::count(),
-            'tersedia' => Ruangan::where('status', 'tersedia')->count(),
-            'tidak_tersedia' => Ruangan::where('status', 'tidak_tersedia')->count(),
-            'dalam_perbaikan' => Ruangan::where('status', 'dalam_perbaikan')->count(),
+            'total'      => Ruangan::count(),
+            'kelas'      => Ruangan::where('jenis', 'kelas')->count(),
+            'lab'        => Ruangan::where('jenis', 'lab')->count(),
+            'tersedia'   => Ruangan::where('status', 'tersedia')->count(),
         ];
 
-        return view('manajemenaset::ruangan.index', compact('ruangans', 'prodis', 'stats'));
+        return Inertia::render('DataMaster/Ruangan/Index', [
+            'ruangans' => $ruangans,
+            'prodis'   => $prodis,
+            'stats'    => $stats,
+            'filters'  => [
+                'search' => $request->search ?? '',
+                'jenis'  => $request->jenis ?? '',
+                'status' => $request->status ?? '',
+            ],
+        ]);
     }
 
     public function create()
     {
-        $prodis = ProgramStudi::orderBy('nama')->get();
-        return view('manajemenaset::ruangan.create', compact('prodis'));
+        return redirect()->route('ruangan.index');
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'prodi_id' => 'nullable|exists:program_studis,id',
-            'kode_ruangan' => 'required|string|max:50|unique:ruangans',
-            'nama_ruangan' => 'required|string|max:255',
-            'jenis' => 'required|in:kelas,lab,ruang_rapat,ruang_dosen,perpustakaan,lainnya',
-            'gedung' => 'nullable|string|max:255',
-            'lantai' => 'nullable|string|max:255',
-            'kapasitas' => 'nullable|integer|min:1',
-            'luas' => 'nullable|numeric|min:0',
-            'kondisi' => 'required|in:baik,rusak_ringan,rusak_berat',
-            'status' => 'required|in:tersedia,tidak_tersedia,dalam_perbaikan',
-            'ber_ac' => 'boolean',
-            'ber_proyektor' => 'boolean',
+            'kode_ruangan'     => 'required|string|max:50|unique:ruangan,kode_ruangan',
+            'nama_ruangan'     => 'required|string|max:255',
+            'jenis'            => 'required|in:kelas,lab,ruang_rapat,ruang_dosen,perpustakaan,lainnya',
+            'gedung'           => 'nullable|string|max:100',
+            'lantai'           => 'nullable|string|max:50',
+            'kapasitas'        => 'nullable|integer|min:1',
+            'luas'             => 'nullable|numeric|min:0',
+            'kondisi'          => 'required|in:baik,rusak_ringan,rusak_berat',
+            'status'           => 'required|in:tersedia,tidak_tersedia,dalam_perbaikan',
+            'ber_ac'           => 'boolean',
+            'ber_proyektor'    => 'boolean',
             'penanggung_jawab' => 'nullable|string|max:255',
-            'fasilitas' => 'nullable|string',
-            'keterangan' => 'nullable|string',
-            'foto' => 'nullable|image|max:2048',
+            'fasilitas'        => 'nullable|string',
+            'keterangan'       => 'nullable|string',
+            'prodi_id'         => 'nullable|exists:program_studis,id',
         ]);
 
-        if ($request->hasFile('foto')) {
-            $validated['foto'] = $request->file('foto')->store('ruangan/foto', 'public');
-        }
+        $validated['ber_ac'] = $request->boolean('ber_ac');
+        $validated['ber_proyektor'] = $request->boolean('ber_proyektor');
 
         Ruangan::create($validated);
 
-        return redirect()->route('ruangan.index')
-            ->with('success', 'Ruangan berhasil ditambahkan.');
+        return back()->with('success', 'Master Ruangan berhasil ditambahkan.');
     }
 
     public function show(Ruangan $ruangan)
     {
-        $ruangan->load(['prodi', 'bookings' => function($q) {
-            $q->whereIn('status', ['pending', 'disetujui'])->orderBy('tanggal', 'desc');
-        }]);
-        return view('manajemenaset::ruangan.show', compact('ruangan'));
+        return redirect()->route('ruangan.index');
     }
 
     public function edit(Ruangan $ruangan)
     {
-        $prodis = ProgramStudi::orderBy('nama')->get();
-        return view('manajemenaset::ruangan.edit', compact('ruangan', 'prodis'));
+        return redirect()->route('ruangan.index');
     }
 
     public function update(Request $request, Ruangan $ruangan)
     {
         $validated = $request->validate([
-            'prodi_id' => 'nullable|exists:program_studis,id',
-            'kode_ruangan' => 'required|string|max:50|unique:ruangans,kode_ruangan,' . $ruangan->id,
-            'nama_ruangan' => 'required|string|max:255',
-            'jenis' => 'required|in:kelas,lab,ruang_rapat,ruang_dosen,perpustakaan,lainnya',
-            'gedung' => 'nullable|string|max:255',
-            'lantai' => 'nullable|string|max:255',
-            'kapasitas' => 'nullable|integer|min:1',
-            'luas' => 'nullable|numeric|min:0',
-            'kondisi' => 'required|in:baik,rusak_ringan,rusak_berat',
-            'status' => 'required|in:tersedia,tidak_tersedia,dalam_perbaikan',
-            'ber_ac' => 'boolean',
-            'ber_proyektor' => 'boolean',
+            'kode_ruangan'     => 'required|string|max:50|unique:ruangan,kode_ruangan,' . $ruangan->id,
+            'nama_ruangan'     => 'required|string|max:255',
+            'jenis'            => 'required|in:kelas,lab,ruang_rapat,ruang_dosen,perpustakaan,lainnya',
+            'gedung'           => 'nullable|string|max:100',
+            'lantai'           => 'nullable|string|max:50',
+            'kapasitas'        => 'nullable|integer|min:1',
+            'luas'             => 'nullable|numeric|min:0',
+            'kondisi'          => 'required|in:baik,rusak_ringan,rusak_berat',
+            'status'           => 'required|in:tersedia,tidak_tersedia,dalam_perbaikan',
+            'ber_ac'           => 'boolean',
+            'ber_proyektor'    => 'boolean',
             'penanggung_jawab' => 'nullable|string|max:255',
-            'fasilitas' => 'nullable|string',
-            'keterangan' => 'nullable|string',
-            'foto' => 'nullable|image|max:2048',
+            'fasilitas'        => 'nullable|string',
+            'keterangan'       => 'nullable|string',
+            'prodi_id'         => 'nullable|exists:program_studis,id',
         ]);
 
-        if ($request->hasFile('foto')) {
-            if ($ruangan->foto) {
-                Storage::disk('public')->delete($ruangan->foto);
-            }
-            $validated['foto'] = $request->file('foto')->store('ruangan/foto', 'public');
-        }
+        $validated['ber_ac'] = $request->boolean('ber_ac');
+        $validated['ber_proyektor'] = $request->boolean('ber_proyektor');
 
         $ruangan->update($validated);
 
-        return redirect()->route('ruangan.index')
-            ->with('success', 'Ruangan berhasil diperbarui.');
+        return back()->with('success', 'Data Ruangan berhasil diperbarui.');
     }
 
     public function destroy(Ruangan $ruangan)
     {
-        if ($ruangan->foto) {
-            Storage::disk('public')->delete($ruangan->foto);
-        }
-
         $ruangan->delete();
-
-        return redirect()->route('ruangan.index')
-            ->with('success', 'Ruangan berhasil dihapus.');
+        return back()->with('success', 'Ruangan berhasil dihapus.');
     }
 }

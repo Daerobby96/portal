@@ -45,10 +45,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('peminjaman/{peminjaman}/return', [PeminjamanController::class, 'return'])->name('peminjaman.return');
     });
 
-    // ── Ruangan (Super Admin, Staff) ────────────────────────────
-    Route::middleware('role:super_admin,staff')->group(function () {
-        Route::resource('ruangan', RuanganController::class);
-    });
+
 
     // ── Booking Ruangan (Semua User) ────────────────────────────
     Route::get('booking-ruangan/create', [BookingRuanganController::class, 'create'])->name('booking-ruangan.create');
