@@ -168,12 +168,25 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        return view('dashboard.index', compact(
-            'periode', 'stats', 'temuanPerKategori', 'auditTerbaru', 
-            'temuanDeadline', 'trenLabels', 'trenData', 'perfTrendData',
-            'listDokumenKadaluarsa', 'radarLabels', 'radarData', 'standarProgress',
-            'ppeppStatus', 'ppeppDetails'
-        ));
+        $allPeriodes = Periode::orderBy('tahun', 'desc')->orderBy('semester', 'desc')->get();
+
+        return \Inertia\Inertia::render('Dashboard/Index', [
+            'periode' => $periode,
+            'allPeriodes' => $allPeriodes,
+            'stats' => $stats,
+            'temuanPerKategori' => $temuanPerKategori,
+            'auditTerbaru' => $auditTerbaru,
+            'temuanDeadline' => $temuanDeadline,
+            'trenLabels' => $trenLabels,
+            'trenData' => $trenData,
+            'perfTrendData' => $perfTrendData,
+            'listDokumenKadaluarsa' => $listDokumenKadaluarsa,
+            'radarLabels' => $radarLabels,
+            'radarData' => $radarData,
+            'standarProgress' => $standarProgress,
+            'ppeppStatus' => $ppeppStatus,
+            'ppeppDetails' => $ppeppDetails,
+        ]);
     }
 
     public function setPeriode(Request $request)
@@ -185,6 +198,6 @@ class DashboardController extends Controller
         Periode::query()->update(['is_aktif' => false]);
         Periode::where('id', $request->periode_id)->update(['is_aktif' => true]);
 
-        return redirect()->back()->with('success', 'Periode berhasil diubah.');
+        return redirect()->back()->with('success', 'Periode mutu aktif berhasil diubah.');
     }
 }

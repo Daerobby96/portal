@@ -7,6 +7,7 @@ use App\Models\User;
 use Modules\DataMaster\Models\Periode;
 use Modules\Spmi\Models\SiklusSpmi;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class SiklusSpmiController extends Controller
 {
@@ -16,14 +17,20 @@ class SiklusSpmiController extends Controller
             ->orderByDesc('tahun_siklus')
             ->get();
 
-        return view('spmi::siklus-spmi.index', compact('sikluses'));
+        return Inertia::render('Spmi/SiklusSpmi/Index', [
+            'sikluses' => $sikluses,
+        ]);
     }
 
     public function create()
     {
         $periodes = Periode::orderByDesc('tahun')->get();
         $users    = User::where('is_active', true)->orderBy('name')->get();
-        return view('spmi::siklus-spmi.create', compact('periodes', 'users'));
+
+        return Inertia::render('Spmi/SiklusSpmi/Create', [
+            'periodes' => $periodes,
+            'users'    => $users,
+        ]);
     }
 
     public function store(Request $request)
@@ -84,14 +91,25 @@ class SiklusSpmiController extends Controller
                     : $s->ppepp_aggregate,
             ]);
 
-        return view('spmi::siklus-spmi.show', compact('siklusSpmi', 'ppepp', 'availablePeriodes', 'previousCycles'));
+        return Inertia::render('Spmi/SiklusSpmi/Show', [
+            'siklusSpmi' => $siklusSpmi,
+            'ppepp' => $ppepp,
+            'availablePeriodes' => $availablePeriodes,
+            'previousCycles' => $previousCycles,
+        ]);
     }
 
     public function edit(SiklusSpmi $siklusSpmi)
     {
+        $siklusSpmi->load(['penanggungJawab', 'periodes']);
         $periodes = Periode::orderByDesc('tahun')->get();
         $users    = User::where('is_active', true)->orderBy('name')->get();
-        return view('spmi::siklus-spmi.edit', compact('siklusSpmi', 'periodes', 'users'));
+
+        return Inertia::render('Spmi/SiklusSpmi/Edit', [
+            'siklusSpmi' => $siklusSpmi,
+            'periodes'   => $periodes,
+            'users'      => $users,
+        ]);
     }
 
     public function update(Request $request, SiklusSpmi $siklusSpmi)
