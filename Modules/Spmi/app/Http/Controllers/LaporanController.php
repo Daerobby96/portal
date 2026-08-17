@@ -350,7 +350,8 @@ class LaporanController extends Controller
                 return back()->with('error', 'Tipe laporan tidak valid.');
         }
 
-        $pdf = Pdf::loadView($view, $data);
+        $resolvedView = view()->exists("spmi::{$view}") ? "spmi::{$view}" : $view;
+        $pdf = Pdf::loadView($resolvedView, $data);
         $pdf->setPaper('A4', 'portrait');
 
         if ($type === 'monitoring' || $type === 'dokumen') {
