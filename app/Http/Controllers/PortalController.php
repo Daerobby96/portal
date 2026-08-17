@@ -28,16 +28,27 @@ class PortalController extends Controller
             [
                 'id' => 'sdm',
                 'category' => 'Sistem Utama',
-                'name' => 'SDM & Data Master',
-                'desc' => 'Pusat Kepegawaian Dosen & Tendik, Data Master Periode & Prodi, Presensi Harian, Cuti, Lembur, SKP, dan Surat Tugas Kedinasan.',
+                'name' => 'SDM & Kepegawaian',
+                'desc' => 'Manajemen Dosen & Tendik, Presensi Harian, Rekapitulasi Kehadiran, Cuti, Lembur, Penilaian Kinerja (SKP), dan Surat Tugas.',
                 'url' => route('sdm.index'),
-                'tag' => 'Kepegawaian & Master',
+                'tag' => 'Kepegawaian',
                 'icon' => 'bi-people-fill',
                 'color' => 'purple',
                 'allowed' => true,
             ],
 
             // ─── Modul Pendukung (Supporting Modules) ────────────────────────
+            [
+                'id' => 'data_master',
+                'category' => 'Modul Pendukung',
+                'name' => 'Data Master Institusi',
+                'desc' => 'Pusat kelola Periode Akademik (Semester Aktif), Program Studi, Jurusan, dan Jenjang Pendidikan.',
+                'url' => route('periode.index'),
+                'tag' => 'Master Data',
+                'icon' => 'bi-database-fill-gear',
+                'color' => 'sky',
+                'allowed' => $user->isSuperAdmin() || $user->isPimpinan(),
+            ],
             [
                 'id' => 'data_akademik',
                 'category' => 'Modul Pendukung',

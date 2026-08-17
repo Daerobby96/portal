@@ -34,11 +34,14 @@ const isRouteActive = (patterns) => {
     });
 };
 
-// Detect active module dynamically based on URL route (Data Master integrated inside SDM)
+// Detect active module dynamically based on URL route
 const activeModule = computed(() => {
     const url = currentUrl.value;
-    if (url.startsWith('/sdm') || url.startsWith('/periode') || url.startsWith('/program-studi')) {
+    if (url.startsWith('/sdm')) {
         return 'sdm';
+    }
+    if (url.startsWith('/periode') || url.startsWith('/program-studi')) {
+        return 'datamaster';
     }
     return 'spmi';
 });
@@ -67,7 +70,7 @@ const toggleGroup = (groupKey) => {
         >
             <!-- Dynamic Brand Logo Header based on Active Module -->
             <div class="pb-4 mb-3 border-b border-slate-100">
-                <!-- SPMI Header -->
+                <!-- 1. SPMI Header -->
                 <div v-if="activeModule === 'spmi'" class="flex items-center gap-3">
                     <Link href="/dashboard" class="flex items-center gap-3 group min-w-0">
                         <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900 flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-600/20 group-hover:scale-105 transition duration-200 shrink-0">
@@ -89,8 +92,8 @@ const toggleGroup = (groupKey) => {
                     </Link>
                 </div>
 
-                <!-- SDM & Data Master Header -->
-                <div v-else class="flex items-center gap-3">
+                <!-- 2. SDM Header -->
+                <div v-else-if="activeModule === 'sdm'" class="flex items-center gap-3">
                     <Link href="/sdm" class="flex items-center gap-3 group min-w-0">
                         <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-700 to-slate-900 flex items-center justify-center text-white font-black text-lg shadow-md shadow-purple-600/20 group-hover:scale-105 transition duration-200 shrink-0">
                             <i class="bi bi-people-fill text-lg"></i>
@@ -105,7 +108,29 @@ const toggleGroup = (groupKey) => {
                                 </span>
                             </div>
                             <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight truncate">
-                                Kepegawaian & Data Master
+                                Kepegawaian & Dosen
+                            </span>
+                        </div>
+                    </Link>
+                </div>
+
+                <!-- 3. Data Master Header -->
+                <div v-else-if="activeModule === 'datamaster'" class="flex items-center gap-3">
+                    <Link href="/periode" class="flex items-center gap-3 group min-w-0">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-600 via-indigo-700 to-slate-900 flex items-center justify-center text-white font-black text-lg shadow-md shadow-sky-600/20 group-hover:scale-105 transition duration-200 shrink-0">
+                            <i class="bi bi-database-fill-gear text-lg"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-black text-slate-900 text-base tracking-tight leading-none group-hover:text-sky-600 transition">
+                                    ERP-POLKA
+                                </span>
+                                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-sky-50 text-sky-700 border border-sky-200/60 tracking-wider">
+                                    DATA MASTER
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight truncate">
+                                Master Data Institusi
                             </span>
                         </div>
                     </Link>
@@ -114,7 +139,7 @@ const toggleGroup = (groupKey) => {
 
             <!-- Contextual Navigation Menus -->
 
-            <!-- 1. MODUL SDM & DATA MASTER SIDEBAR MENU -->
+            <!-- 1. MODUL SDM SIDEBAR MENU -->
             <nav v-if="activeModule === 'sdm'" class="space-y-1.5 flex-1 text-xs">
                 <a
                     href="/sdm"
@@ -125,37 +150,13 @@ const toggleGroup = (groupKey) => {
                     <span>Dashboard SDM</span>
                 </a>
 
-                <div class="pt-2 pb-1">
-                    <div class="h-px bg-slate-100"></div>
-                </div>
-
-                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Data Master</div>
-
                 <a
                     href="/sdm/pegawai"
-                    class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition"
-                    :class="isRouteActive('/sdm/pegawai') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/sdm/pegawai') ? 'bg-purple-50 text-purple-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
                 >
-                    <i class="bi bi-person-vcard text-base"></i>
+                    <i class="bi bi-person-vcard text-base" :class="isRouteActive('/sdm/pegawai') ? 'text-purple-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
                     <span>Master Pegawai & Dosen</span>
-                </a>
-
-                <a
-                    href="/periode"
-                    class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition"
-                    :class="isRouteActive('/periode') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-                >
-                    <i class="bi bi-calendar3 text-base"></i>
-                    <span>Periode Akademik</span>
-                </a>
-
-                <a
-                    href="/program-studi"
-                    class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition"
-                    :class="isRouteActive('/program-studi') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-                >
-                    <i class="bi bi-mortarboard text-base"></i>
-                    <span>Program Studi & Jurusan</span>
                 </a>
 
                 <div class="pt-2 pb-1">
@@ -225,7 +226,30 @@ const toggleGroup = (groupKey) => {
                 </a>
             </nav>
 
-            <!-- 2. MODUL SPMI (PPEPP) SIDEBAR MENU -->
+            <!-- 2. DATA MASTER SIDEBAR MENU -->
+            <nav v-else-if="activeModule === 'datamaster'" class="space-y-1.5 flex-1 text-xs">
+                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Struktur Akademik</div>
+                
+                <a
+                    href="/periode"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/periode') ? 'bg-sky-50 text-sky-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-calendar3 text-base" :class="isRouteActive('/periode') ? 'text-sky-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Periode Akademik & Semester</span>
+                </a>
+
+                <a
+                    href="/program-studi"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/program-studi') ? 'bg-sky-50 text-sky-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-mortarboard text-base" :class="isRouteActive('/program-studi') ? 'text-sky-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Program Studi & Jurusan</span>
+                </a>
+            </nav>
+
+            <!-- 3. MODUL SPMI (PPEPP) SIDEBAR MENU -->
             <nav v-else class="space-y-1.5 flex-1 text-xs">
                 <!-- Dashboard -->
                 <a
@@ -518,7 +542,7 @@ const toggleGroup = (groupKey) => {
                         <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white flex items-center justify-center font-bold text-base shadow-sm">P</div>
                         <div>
                             <span class="font-extrabold text-slate-900 text-sm block leading-tight">ERP-POLKA</span>
-                            <span class="text-[10px] font-bold text-indigo-600 uppercase">{{ activeModule === 'sdm' ? 'MODUL SDM' : 'SPMI PPEPP' }}</span>
+                            <span class="text-[10px] font-bold uppercase text-indigo-600">{{ activeModule === 'sdm' ? 'MODUL SDM' : (activeModule === 'datamaster' ? 'DATA MASTER' : 'SPMI PPEPP') }}</span>
                         </div>
                     </div>
                     <button @click="mobileSidebarOpen = false" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700">
@@ -529,12 +553,8 @@ const toggleGroup = (groupKey) => {
                 <!-- Mobile SDM Navigation -->
                 <nav v-if="activeModule === 'sdm'" class="space-y-1 flex-1 text-xs">
                     <a href="/sdm" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-speedometer2"></i><span>Dashboard SDM</span></a>
+                    <a href="/sdm/pegawai" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-person-vcard"></i><span>Master Pegawai</span></a>
                     
-                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Data Master</div>
-                    <a href="/sdm/pegawai" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-person-vcard"></i><span>Master Pegawai</span></a>
-                    <a href="/periode" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-calendar3"></i><span>Periode Akademik</span></a>
-                    <a href="/program-studi" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-mortarboard"></i><span>Program Studi</span></a>
-
                     <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Kehadiran</div>
                     <a href="/sdm/presensi" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-fingerprint"></i><span>Presensi Harian</span></a>
                     <a href="/sdm/presensi/rekap" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-file-earmark-bar-graph"></i><span>Rekap Kehadiran</span></a>
@@ -544,6 +564,12 @@ const toggleGroup = (groupKey) => {
                     <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Kinerja</div>
                     <a href="/sdm/penilaian-kinerja" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-award"></i><span>Penilaian Kinerja</span></a>
                     <a href="/sdm/surat-tugas" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-journal-bookmark"></i><span>Surat Tugas</span></a>
+                </nav>
+
+                <!-- Mobile DataMaster Navigation -->
+                <nav v-else-if="activeModule === 'datamaster'" class="space-y-1 flex-1 text-xs">
+                    <a href="/periode" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-calendar3"></i><span>Periode Akademik</span></a>
+                    <a href="/program-studi" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-mortarboard"></i><span>Program Studi</span></a>
                 </nav>
 
                 <!-- Mobile SPMI Navigation -->
