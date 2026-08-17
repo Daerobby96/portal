@@ -34,7 +34,19 @@ const isRouteActive = (patterns) => {
     });
 };
 
-// Accordion Groups for 5 Pillars of PPEPP
+// Detect active module dynamically based on URL route
+const activeModule = computed(() => {
+    const url = currentUrl.value;
+    if (url.startsWith('/sdm')) {
+        return 'sdm';
+    }
+    if (url.startsWith('/periode') || url.startsWith('/program-studi')) {
+        return 'datamaster';
+    }
+    return 'spmi';
+});
+
+// Accordion Groups for SPMI 5 Pillars of PPEPP
 const openGroups = ref({
     p1: isRouteActive(['/dokumen', '/standar', '/kategori-dokumen', '/indikator-kinerja', '/iku-resmi']),
     p2: isRouteActive(['/monitoring', '/integrasi']),
@@ -56,30 +68,189 @@ const toggleGroup = (groupKey) => {
             v-if="sidebarOpen"
             class="hidden md:flex flex-col w-72 h-screen bg-white border-r border-slate-200/80 shrink-0 p-4 sticky top-0 transition-all duration-300 select-none overflow-y-auto z-20"
         >
-            <!-- Brand Logo Header -->
-            <div class="flex items-center gap-3 pb-4 mb-3 border-b border-slate-100">
-                <Link href="/dashboard" class="flex items-center gap-3 group min-w-0">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900 flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-600/20 group-hover:scale-105 transition duration-200 shrink-0">
-                        P
-                    </div>
-                    <div class="flex flex-col min-w-0">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                            <span class="font-black text-slate-900 text-base tracking-tight leading-none group-hover:text-indigo-600 transition">
-                                ERP-POLKA
-                            </span>
-                            <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200/60 tracking-wider">
-                                SPMI PPEPP
+            <!-- Dynamic Brand Logo Header based on Active Module -->
+            <div class="pb-4 mb-3 border-b border-slate-100">
+                <!-- SPMI Header -->
+                <div v-if="activeModule === 'spmi'" class="flex items-center gap-3">
+                    <Link href="/dashboard" class="flex items-center gap-3 group min-w-0">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900 flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-600/20 group-hover:scale-105 transition duration-200 shrink-0">
+                            P
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-black text-slate-900 text-base tracking-tight leading-none group-hover:text-indigo-600 transition">
+                                    ERP-POLKA
+                                </span>
+                                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200/60 tracking-wider">
+                                    SPMI PPEPP
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight truncate">
+                                Penjaminan Mutu Internal
                             </span>
                         </div>
-                        <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight truncate">
-                            Penjaminan Mutu Internal
-                        </span>
-                    </div>
-                </Link>
+                    </Link>
+                </div>
+
+                <!-- SDM Header -->
+                <div v-else-if="activeModule === 'sdm'" class="flex items-center gap-3">
+                    <Link href="/sdm" class="flex items-center gap-3 group min-w-0">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-700 to-slate-900 flex items-center justify-center text-white font-black text-lg shadow-md shadow-purple-600/20 group-hover:scale-105 transition duration-200 shrink-0">
+                            <i class="bi bi-people-fill text-lg"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-black text-slate-900 text-base tracking-tight leading-none group-hover:text-purple-600 transition">
+                                    ERP-POLKA
+                                </span>
+                                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-purple-50 text-purple-700 border border-purple-200/60 tracking-wider">
+                                    MODUL SDM
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight truncate">
+                                Kepegawaian & Dosen
+                            </span>
+                        </div>
+                    </Link>
+                </div>
+
+                <!-- Data Master Header -->
+                <div v-else-if="activeModule === 'datamaster'" class="flex items-center gap-3">
+                    <Link href="/periode" class="flex items-center gap-3 group min-w-0">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-700 to-slate-900 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-600/20 group-hover:scale-105 transition duration-200 shrink-0">
+                            <i class="bi bi-database-fill text-lg"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-black text-slate-900 text-base tracking-tight leading-none group-hover:text-blue-600 transition">
+                                    ERP-POLKA
+                                </span>
+                                <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-blue-50 text-blue-700 border border-blue-200/60 tracking-wider">
+                                    DATA MASTER
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-semibold text-slate-400 mt-1 leading-tight truncate">
+                                Master Data Institusi
+                            </span>
+                        </div>
+                    </Link>
+                </div>
             </div>
 
-            <!-- Navigation Links (5 Pillars of PPEPP) -->
-            <nav class="space-y-1.5 flex-1 text-xs">
+            <!-- Contextual Navigation Menus -->
+
+            <!-- 1. MODUL SDM SIDEBAR MENU -->
+            <nav v-if="activeModule === 'sdm'" class="space-y-1.5 flex-1 text-xs">
+                <a
+                    href="/sdm"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="currentUrl === '/sdm' ? 'bg-purple-50 text-purple-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-speedometer2 text-base" :class="currentUrl === '/sdm' ? 'text-purple-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Dashboard SDM</span>
+                </a>
+
+                <a
+                    href="/sdm/pegawai"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/sdm/pegawai') ? 'bg-purple-50 text-purple-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-person-vcard text-base" :class="isRouteActive('/sdm/pegawai') ? 'text-purple-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Master Pegawai & Dosen</span>
+                </a>
+
+                <div class="pt-2 pb-1">
+                    <div class="h-px bg-slate-100"></div>
+                </div>
+
+                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Operasional Kehadiran</div>
+                
+                <a
+                    href="/sdm/presensi"
+                    class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition"
+                    :class="isRouteActive('/sdm/presensi') && !isRouteActive('/sdm/presensi/rekap') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-fingerprint text-base"></i>
+                    <span>Presensi Harian</span>
+                </a>
+
+                <a
+                    href="/sdm/presensi/rekap"
+                    class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition"
+                    :class="isRouteActive('/sdm/presensi/rekap') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-file-earmark-bar-graph text-base"></i>
+                    <span>Rekapitulasi Kehadiran</span>
+                </a>
+
+                <a
+                    href="/sdm/cuti"
+                    class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition"
+                    :class="isRouteActive('/sdm/cuti') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-calendar-event text-base"></i>
+                    <span>Manajemen Cuti & Izin</span>
+                </a>
+
+                <a
+                    href="/sdm/lembur"
+                    class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition"
+                    :class="isRouteActive('/sdm/lembur') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-stopwatch text-base"></i>
+                    <span>Lembur Pegawai</span>
+                </a>
+
+                <div class="pt-2 pb-1">
+                    <div class="h-px bg-slate-100"></div>
+                </div>
+
+                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Kinerja & Penugasan</div>
+
+                <a
+                    href="/sdm/penilaian-kinerja"
+                    class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition"
+                    :class="isRouteActive('/sdm/penilaian-kinerja') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-award text-base"></i>
+                    <span>Penilaian Kinerja (SKP)</span>
+                </a>
+
+                <a
+                    href="/sdm/surat-tugas"
+                    class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition"
+                    :class="isRouteActive('/sdm/surat-tugas') ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-journal-bookmark text-base"></i>
+                    <span>Surat Tugas Kedinasan</span>
+                </a>
+            </nav>
+
+            <!-- 2. DATA MASTER SIDEBAR MENU -->
+            <nav v-else-if="activeModule === 'datamaster'" class="space-y-1.5 flex-1 text-xs">
+                <div class="px-3.5 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Struktur Akademik</div>
+                
+                <a
+                    href="/periode"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/periode') ? 'bg-blue-50 text-blue-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-calendar3 text-base" :class="isRouteActive('/periode') ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Periode Akademik & Semester</span>
+                </a>
+
+                <a
+                    href="/program-studi"
+                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold transition group"
+                    :class="isRouteActive('/program-studi') ? 'bg-blue-50 text-blue-700 font-bold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                >
+                    <i class="bi bi-mortarboard text-base" :class="isRouteActive('/program-studi') ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'"></i>
+                    <span>Program Studi & Jurusan</span>
+                </a>
+            </nav>
+
+            <!-- 3. MODUL SPMI (PPEPP) SIDEBAR MENU -->
+            <nav v-else class="space-y-1.5 flex-1 text-xs">
                 <!-- Dashboard -->
                 <a
                     href="/dashboard"
@@ -121,46 +292,11 @@ const toggleGroup = (groupKey) => {
                         <i class="bi bi-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': openGroups.p1 }"></i>
                     </button>
                     <div v-show="openGroups.p1" class="pl-6 pr-1 py-1 space-y-1 border-l-2 border-indigo-100 ml-4.5 my-1">
-                        <a
-                            href="/dokumen"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/dokumen') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-folder2 text-xs"></i>
-                            <span>Dokumen Mutu</span>
-                        </a>
-                        <a
-                            href="/standar"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/standar') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-bookmark-check text-xs"></i>
-                            <span>Standar Mutu SN-Dikti</span>
-                        </a>
-                        <a
-                            href="/kategori-dokumen"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/kategori-dokumen') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-tags text-xs"></i>
-                            <span>Kategori Dokumen</span>
-                        </a>
-                        <a
-                            href="/indikator-kinerja"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/indikator-kinerja') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-bullseye text-xs"></i>
-                            <span>Indikator Kinerja (IKU/IKT)</span>
-                        </a>
-                        <a
-                            href="/iku-resmi"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/iku-resmi') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-award text-xs"></i>
-                            <span>8 IKU Kemdiktisaintek</span>
-                        </a>
+                        <a href="/dokumen" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/dokumen') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-folder2 text-xs"></i><span>Dokumen Mutu</span></a>
+                        <a href="/standar" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/standar') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-bookmark-check text-xs"></i><span>Standar Mutu SN-Dikti</span></a>
+                        <a href="/kategori-dokumen" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/kategori-dokumen') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-tags text-xs"></i><span>Kategori Dokumen</span></a>
+                        <a href="/indikator-kinerja" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/indikator-kinerja') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-bullseye text-xs"></i><span>Indikator Kinerja (IKU/IKT)</span></a>
+                        <a href="/iku-resmi" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/iku-resmi') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-award text-xs"></i><span>8 IKU Kemdiktisaintek</span></a>
                     </div>
                 </div>
 
@@ -177,22 +313,8 @@ const toggleGroup = (groupKey) => {
                         <i class="bi bi-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': openGroups.p2 }"></i>
                     </button>
                     <div v-show="openGroups.p2" class="pl-6 pr-1 py-1 space-y-1 border-l-2 border-blue-100 ml-4.5 my-1">
-                        <a
-                            href="/monitoring"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/monitoring') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-bar-chart-line text-xs"></i>
-                            <span>Monitoring Realisasi IKU</span>
-                        </a>
-                        <a
-                            href="/integrasi"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/integrasi') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-diagram-3 text-xs"></i>
-                            <span>Integrasi Data ERP</span>
-                        </a>
+                        <a href="/monitoring" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/monitoring') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-bar-chart-line text-xs"></i><span>Monitoring Realisasi IKU</span></a>
+                        <a href="/integrasi" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/integrasi') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-diagram-3 text-xs"></i><span>Integrasi Data ERP</span></a>
                     </div>
                 </div>
 
@@ -201,7 +323,7 @@ const toggleGroup = (groupKey) => {
                     <button
                         @click="toggleGroup('p3')"
                         class="w-full flex items-center justify-between px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 rounded-xl transition cursor-pointer"
-                        >
+                    >
                         <div class="flex items-center gap-2.5">
                             <span class="w-5 h-5 rounded-lg bg-amber-100 text-amber-800 font-bold text-[10px] flex items-center justify-center">P3</span>
                             <span class="tracking-tight uppercase text-[11px]">Evaluasi Pelaksanaan</span>
@@ -209,46 +331,11 @@ const toggleGroup = (groupKey) => {
                         <i class="bi bi-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': openGroups.p3 }"></i>
                     </button>
                     <div v-show="openGroups.p3" class="pl-6 pr-1 py-1 space-y-1 border-l-2 border-amber-100 ml-4.5 my-1">
-                        <a
-                            href="/evaluasi"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/evaluasi') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-graph-up-arrow text-xs"></i>
-                            <span>Evaluasi Capaian Standar</span>
-                        </a>
-                        <a
-                            href="/audit"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/audit') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-clipboard2-check text-xs"></i>
-                            <span>Audit Mutu Internal (AMI)</span>
-                        </a>
-                        <a
-                            href="/survei"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/survei') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-chat-square-dots text-xs"></i>
-                            <span>Survei Kepuasan</span>
-                        </a>
-                        <a
-                            href="/kuesioner"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/kuesioner') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-ui-checks text-xs"></i>
-                            <span>Manajemen Kuesioner</span>
-                        </a>
-                        <a
-                            href="/kinerja-dosen"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/kinerja-dosen') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-person-badge text-xs"></i>
-                            <span>Evaluasi Dosen (EDOM)</span>
-                        </a>
+                        <a href="/evaluasi" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/evaluasi') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-graph-up-arrow text-xs"></i><span>Evaluasi Capaian Standar</span></a>
+                        <a href="/audit" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/audit') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-clipboard2-check text-xs"></i><span>Audit Mutu Internal (AMI)</span></a>
+                        <a href="/survei" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/survei') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-chat-square-dots text-xs"></i><span>Survei Kepuasan</span></a>
+                        <a href="/kuesioner" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/kuesioner') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-ui-checks text-xs"></i><span>Manajemen Kuesioner</span></a>
+                        <a href="/kinerja-dosen" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/kinerja-dosen') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-person-badge text-xs"></i><span>Evaluasi Dosen (EDOM)</span></a>
                     </div>
                 </div>
 
@@ -265,22 +352,8 @@ const toggleGroup = (groupKey) => {
                         <i class="bi bi-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': openGroups.p4 }"></i>
                     </button>
                     <div v-show="openGroups.p4" class="pl-6 pr-1 py-1 space-y-1 border-l-2 border-rose-100 ml-4.5 my-1">
-                        <a
-                            href="/tindak-lanjut"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/tindak-lanjut') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-arrow-repeat text-xs"></i>
-                            <span>Tindak Lanjut PTK</span>
-                        </a>
-                        <a
-                            href="/rtm"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/rtm') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-people-fill text-xs"></i>
-                            <span>Rapat Tinjauan Manajemen</span>
-                        </a>
+                        <a href="/tindak-lanjut" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/tindak-lanjut') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-arrow-repeat text-xs"></i><span>Tindak Lanjut PTK</span></a>
+                        <a href="/rtm" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/rtm') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-people-fill text-xs"></i><span>Rapat Tinjauan Manajemen</span></a>
                     </div>
                 </div>
 
@@ -297,35 +370,21 @@ const toggleGroup = (groupKey) => {
                         <i class="bi bi-chevron-down text-[10px] transition-transform duration-200" :class="{ 'rotate-180': openGroups.p5 }"></i>
                     </button>
                     <div v-show="openGroups.p5" class="pl-6 pr-1 py-1 space-y-1 border-l-2 border-emerald-100 ml-4.5 my-1">
-                        <a
-                            href="/laporan"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/laporan') && !isRouteActive('/laporan/tren') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-file-earmark-bar-graph text-xs"></i>
-                            <span>Pusat Laporan SPMI</span>
-                        </a>
-                        <a
-                            href="/laporan/tren"
-                            class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition"
-                            :class="isRouteActive('/laporan/tren') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"
-                        >
-                            <i class="bi bi-graph-up text-xs"></i>
-                            <span>Tren Perkembangan Mutu</span>
-                        </a>
+                        <a href="/laporan" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/laporan') && !isRouteActive('/laporan/tren') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-file-earmark-bar-graph text-xs"></i><span>Pusat Laporan SPMI</span></a>
+                        <a href="/laporan/tren" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition" :class="isRouteActive('/laporan/tren') ? 'text-indigo-600 font-bold bg-indigo-50/70' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'"><i class="bi bi-graph-up text-xs"></i><span>Tren Perkembangan Mutu</span></a>
                     </div>
                 </div>
             </nav>
 
-            <!-- Sidebar Footer Status Card -->
-            <div class="mt-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-900 to-slate-900 text-white shadow-md">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span class="text-[11px] font-bold text-indigo-200">Siklus PPEPP Berjalan</span>
-                </div>
-                <p class="text-[11px] text-slate-300 leading-snug">
-                    Standar SPMI Berkelanjutan SN-Dikti & Kepmendikti 358/2025.
-                </p>
+            <!-- Switch to Portal Quick Launcher Button -->
+            <div class="pt-2">
+                <Link
+                    href="/portal"
+                    class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200/80 transition"
+                >
+                    <i class="bi bi-grid-fill text-indigo-600"></i>
+                    <span>Kembali ke Portal Modul</span>
+                </Link>
             </div>
         </aside>
 
@@ -364,7 +423,7 @@ const toggleGroup = (groupKey) => {
                             <!-- Active Period Status Pill -->
                             <div class="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-slate-100/80 border border-slate-200/80 text-xs shadow-2xs">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span class="text-slate-500 font-medium">Periode SPMI:</span>
+                                <span class="text-slate-500 font-medium">Periode Akademik:</span>
                                 <span class="font-extrabold text-slate-900 font-mono">
                                     {{ activePeriode?.nama || (activePeriode?.tahun ? `${activePeriode.tahun} (${activePeriode.semester || '-'})` : 'Tahun Akademik Berjalan') }}
                                 </span>
@@ -483,7 +542,7 @@ const toggleGroup = (groupKey) => {
                         <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white flex items-center justify-center font-bold text-base shadow-sm">P</div>
                         <div>
                             <span class="font-extrabold text-slate-900 text-sm block leading-tight">ERP-POLKA</span>
-                            <span class="text-[10px] font-bold text-indigo-600 uppercase">SPMI PPEPP</span>
+                            <span class="text-[10px] font-bold text-indigo-600 uppercase">{{ activeModule === 'sdm' ? 'MODUL SDM' : (activeModule === 'datamaster' ? 'DATA MASTER' : 'SPMI PPEPP') }}</span>
                         </div>
                     </div>
                     <button @click="mobileSidebarOpen = false" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700">
@@ -491,37 +550,51 @@ const toggleGroup = (groupKey) => {
                     </button>
                 </div>
 
-                <nav class="space-y-1 flex-1 text-xs">
-                    <a href="/dashboard" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold" :class="isRouteActive('/dashboard') ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600'">
-                        <i class="bi bi-speedometer2"></i><span>Dashboard Eksekutif</span>
-                    </a>
-                    <a href="/siklus-spmi" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold" :class="isRouteActive(['/siklus-spmi', '/ppepp']) ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600'">
-                        <i class="bi bi-arrow-repeat"></i><span>Siklus Mutu (Master)</span>
-                    </a>
+                <!-- Mobile SDM Navigation -->
+                <nav v-if="activeModule === 'sdm'" class="space-y-1 flex-1 text-xs">
+                    <a href="/sdm" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-speedometer2"></i><span>Dashboard SDM</span></a>
+                    <a href="/sdm/pegawai" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-person-vcard"></i><span>Master Pegawai</span></a>
+                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Kehadiran</div>
+                    <a href="/sdm/presensi" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-fingerprint"></i><span>Presensi Harian</span></a>
+                    <a href="/sdm/presensi/rekap" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-file-earmark-bar-graph"></i><span>Rekap Kehadiran</span></a>
+                    <a href="/sdm/cuti" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-calendar-event"></i><span>Cuti & Izin</span></a>
+                    <a href="/sdm/lembur" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-stopwatch"></i><span>Lembur</span></a>
+                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">Kinerja</div>
+                    <a href="/sdm/penilaian-kinerja" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-award"></i><span>Penilaian Kinerja</span></a>
+                    <a href="/sdm/surat-tugas" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-journal-bookmark"></i><span>Surat Tugas</span></a>
+                </nav>
 
-                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P1: Penetapan Standar</div>
+                <!-- Mobile DataMaster Navigation -->
+                <nav v-else-if="activeModule === 'datamaster'" class="space-y-1 flex-1 text-xs">
+                    <a href="/periode" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-calendar3"></i><span>Periode Akademik</span></a>
+                    <a href="/program-studi" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-mortarboard"></i><span>Program Studi</span></a>
+                </nav>
+
+                <!-- Mobile SPMI Navigation -->
+                <nav v-else class="space-y-1 flex-1 text-xs">
+                    <a href="/dashboard" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+                    <a href="/siklus-spmi" class="flex items-center gap-3 px-3 py-2 rounded-xl font-semibold"><i class="bi bi-arrow-repeat"></i><span>Siklus PPEPP</span></a>
+                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P1: Penetapan</div>
                     <a href="/dokumen" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-folder2"></i><span>Dokumen Mutu</span></a>
                     <a href="/standar" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-bookmark-check"></i><span>Standar Mutu</span></a>
                     <a href="/indikator-kinerja" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-bullseye"></i><span>Indikator IKU/IKT</span></a>
-                    <a href="/iku-resmi" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-award"></i><span>8 IKU Resmi</span></a>
-
-                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P2: Pelaksanaan Standar</div>
+                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P2: Pelaksanaan</div>
                     <a href="/monitoring" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-bar-chart-line"></i><span>Monitoring IKU</span></a>
-                    <a href="/integrasi" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-diagram-3"></i><span>Integrasi ERP</span></a>
-
-                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P3: Evaluasi Pelaksanaan</div>
-                    <a href="/evaluasi" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-graph-up-arrow"></i><span>Evaluasi Capaian</span></a>
-                    <a href="/audit" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-clipboard2-check"></i><span>Audit Mutu Internal</span></a>
-                    <a href="/survei" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-chat-square-dots"></i><span>Survei Kepuasan</span></a>
-
-                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P4: Pengendalian Mutu</div>
+                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P3: Evaluasi</div>
+                    <a href="/audit" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-clipboard2-check"></i><span>Audit Mutu (AMI)</span></a>
+                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P4: Pengendalian</div>
                     <a href="/tindak-lanjut" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-arrow-repeat"></i><span>Tindak Lanjut PTK</span></a>
-                    <a href="/rtm" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-people-fill"></i><span>RTM Pimpinan</span></a>
-
-                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P5: Peningkatan & Laporan</div>
+                    <a href="/rtm" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-people-fill"></i><span>RTM</span></a>
+                    <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">P5: Peningkatan</div>
                     <a href="/laporan" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-file-earmark-bar-graph"></i><span>Pusat Laporan</span></a>
-                    <a href="/laporan/tren" class="flex items-center gap-3 px-3 py-1.5 rounded-xl text-slate-600"><i class="bi bi-graph-up"></i><span>Tren Mutu</span></a>
                 </nav>
+
+                <div class="pt-4 mt-auto border-t border-slate-100">
+                    <Link href="/portal" class="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700">
+                        <i class="bi bi-grid-fill text-indigo-600"></i>
+                        <span>Portal Modul</span>
+                    </Link>
+                </div>
             </div>
         </div>
 
