@@ -1,6 +1,8 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import axios from 'axios';
 
 const props = defineProps({
     temuan: Object,
@@ -17,6 +19,47 @@ const form = useForm({
     target_selesai: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     bukti_tindakan: null,
 });
+
+const isAnalyzingRca = ref(false);
+const isSuggestingAction = ref(false);
+
+const aiAnalyzeRootCause = async () => {
+    isAnalyzingRca.value = true;
+    try {
+        const text = `${props.temuan.kategori}: ${props.temuan.uraian_temuan}. Bukti: ${props.temuan.bukti_objektif || '-'}`;
+        const res = await axios.post('/ai/analyze-root-cause', { text });
+        if (res.data.status === 'success') {
+            form.analisa_penyebab = res.data.data;
+            if (!form.metode_5_whys) {
+                form.metode_5_whys = `1. Mengapa terjadi? Karena proses belum terdokumentasi optimal.\n2. Mengapa belum terdokumentasi? Kurangnya standarisasi SOP internal.\n3. Mengapa belum terstandarisasi? Belum ada evaluasi berkala di unit.\n4. Mengapa belum ada evaluasi? Beban kerja dan kurangnya reminder jadwal SPMI.\n5. Akar Masalah: Diperlukan sistem checklist operasional terintegrasi.`;
+            }
+        } else {
+            alert(res.data.message || 'Gagal menghasilkan analisis AI.');
+        }
+    } catch (err) {
+        alert('Gagal terhubung dengan layanan AI.');
+    } finally {
+        isAnalyzingRca.value = false;
+    }
+};
+
+const aiSuggestAction = async () => {
+    isSuggestingAction.value = true;
+    try {
+        const text = `${props.temuan.uraian_temuan}. Akar Penyebab: ${form.analisa_penyebab}`;
+        const res = await axios.post('/ai/suggest-recommendation', { text });
+        if (res.data.status === 'success') {
+            form.rencana_tindakan = res.data.data;
+            form.tindakan_pencegahan = `Melakukan review berkala setiap semester dan menetapkan penanggung jawab pengendali mutu dokumen internal.`;
+        } else {
+            alert(res.data.message || 'Gagal menghasilkan rekomendasi AI.');
+        }
+    } catch (err) {
+        alert('Gagal terhubung dengan layanan AI.');
+    } finally {
+        isSuggestingAction.value = false;
+    }
+};
 
 const handleFileChange = (e) => {
     form.bukti_tindakan = e.target.files[0];
@@ -40,7 +83,7 @@ const submit = () => {
                     Kembali ke Daftar Temuan
                 </a>
                 <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Formulir Tindak Lanjut Temuan (PTK)</h1>
-                <p class="text-xs text-slate-500 mt-0.5">Rencanakan tindakan perbaikan korektif dan pencegahan untuk temuan audit.</p>
+                <p class="text-xs text-slate-500 mt-0.5">Rencanakan tindakan perbaikan korektif dan pencegahan dengan bantuan Asisten AI SPMI.</p>
             </div>
 
             <!-- Temuan Summary Box -->
@@ -86,10 +129,22 @@ const submit = () => {
                         </div>
                     </div>
 
+                    <!-- RCA with AI Trigger -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                            Analisa Akar Penyebab Masalah (Root Cause Analysis) <span class="text-rose-500">*</span>
-                        </label>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Analisa Akar Penyebab Masalah (RCA) <span class="text-rose-500">*</span>
+                            </label>
+                            <button
+                                type="button"
+                                @click="aiAnalyzeRootCause"
+                                :disabled="isAnalyzingRca"
+                                class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[11px] font-bold shadow-xs hover:opacity-95 transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                                <i class="bi bi-stars"></i>
+                                <span>{{ isAnalyzingRca ? 'AI Sedang Menganalisis...' : '✨ AI Analisis Akar Masalah' }}</span>
+                            </button>
+                        </div>
                         <textarea
                             v-model="form.analisa_penyebab"
                             rows="3"
@@ -111,11 +166,23 @@ const submit = () => {
                         ></textarea>
                     </div>
 
+                    <!-- Corrective Action with AI Trigger -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                                Rencana Tindakan Korektif (Perbaikan) <span class="text-rose-500">*</span>
-                            </label>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    Rencana Tindakan Korektif <span class="text-rose-500">*</span>
+                                </label>
+                                <button
+                                    type="button"
+                                    @click="aiSuggestAction"
+                                    :disabled="isSuggestingAction"
+                                    class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold hover:bg-indigo-100 transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                >
+                                    <i class="bi bi-magic"></i>
+                                    <span>{{ isSuggestingAction ? 'Menyarankan...' : '✨ AI Rekomendasi' }}</span>
+                                </button>
+                            </div>
                             <textarea
                                 v-model="form.rencana_tindakan"
                                 rows="3"

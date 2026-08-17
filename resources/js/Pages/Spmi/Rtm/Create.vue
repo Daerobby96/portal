@@ -1,6 +1,8 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import axios from 'axios';
 
 const form = useForm({
     judul_rapat: 'Rapat Tinjauan Manajemen (RTM) Siklus Mutu',
@@ -20,6 +22,39 @@ const form = useForm({
     file_absensi: null,
 });
 
+const isGeneratingAi = ref(false);
+
+const aiGenerateRtmDraft = async () => {
+    isGeneratingAi.value = true;
+    try {
+        const res = await axios.post('/ai/rtm-draft', {
+            judul_rapat: form.judul_rapat,
+            agenda: form.agenda,
+            input_audit_internal: form.input_audit_internal,
+            input_umpan_balik: form.input_umpan_balik,
+            input_kinerja_proses: form.input_kinerja_proses,
+            input_status_tindakan: form.input_status_tindakan,
+            input_perubahan_sistem: form.input_perubahan_sistem,
+            input_rekomendasi: form.input_rekomendasi,
+        });
+
+        if (res.data.status === 'success' && res.data.data) {
+            const d = res.data.data;
+            if (d.notulensi) form.notulensi = d.notulensi;
+            if (d.output_keefektifan) form.output_keefektifan = d.output_keefektifan;
+            if (d.output_perbaikan) form.output_perbaikan = d.output_perbaikan;
+            if (d.output_sumber_daya) form.output_sumber_daya = d.output_sumber_daya;
+            if (d.keputusan_manajemen) form.keputusan_manajemen = d.keputusan_manajemen;
+        } else {
+            alert(res.data.message || 'Gagal menghasilkan draf RTM dengan AI.');
+        }
+    } catch (err) {
+        alert('Gagal terhubung dengan layanan AI RTM.');
+    } finally {
+        isGeneratingAi.value = false;
+    }
+};
+
 const handleFileChange = (e) => {
     form.file_absensi = e.target.files[0];
 };
@@ -36,13 +71,25 @@ const submit = () => {
         <Head title="Buat RTM Baru" />
 
         <div class="max-w-4xl mx-auto space-y-6">
-            <div>
-                <a href="/rtm" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1.5 mb-1.5">
-                    <i class="bi bi-arrow-left"></i>
-                    Kembali ke Daftar RTM
-                </a>
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Rapat Tinjauan Manajemen (RTM)</h1>
-                <p class="text-xs text-slate-500 mt-0.5">Dokumentasikan input, pembahasan, dan keputusan strategis pimpinan (Pilar Pengendalian P4).</p>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <a href="/rtm" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1.5 mb-1.5">
+                        <i class="bi bi-arrow-left"></i>
+                        Kembali ke Daftar RTM
+                    </a>
+                    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Rapat Tinjauan Manajemen (RTM)</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">Dokumentasikan input, pembahasan, dan keputusan strategis pimpinan (Pilar Pengendalian P4).</p>
+                </div>
+
+                <button
+                    type="button"
+                    @click="aiGenerateRtmDraft"
+                    :disabled="isGeneratingAi"
+                    class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-purple-600/25 cursor-pointer disabled:opacity-50"
+                >
+                    <i class="bi bi-stars"></i>
+                    <span>{{ isGeneratingAi ? 'AI Sedang Merumuskan RTM...' : '✨ AI Generate Draf RTM' }}</span>
+                </button>
             </div>
 
             <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs">
@@ -139,7 +186,7 @@ const submit = () => {
                             <textarea
                                 v-model="form.notulensi"
                                 rows="3"
-                                placeholder="Catatan dinamika pembahasan..."
+                                placeholder="Catatan dinamika pembahasan (Bisa di-generate otomatis via tombol AI di atas)..."
                                 class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             ></textarea>
                         </div>
