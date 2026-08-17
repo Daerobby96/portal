@@ -42,7 +42,7 @@ class RtmController extends Controller
 
     public function create()
     {
-        return view('spmi::rtm.create');
+        return \Inertia\Inertia::render('Spmi/Rtm/Create');
     }
 
     public function store(Request $request)
@@ -89,12 +89,10 @@ class RtmController extends Controller
             'closed' => \Modules\Spmi\Models\Temuan::whereHas('audit', fn($q) => $q->where('periode_id', $periodeId))->whereIn('status', ['closed', 'verified'])->count(),
         ];
 
-        return view('spmi::rtm.create', compact('rTM', 'findingStats'));
-    }
-
-    public function edit(RTM $rTM)
-    {
-        return view('spmi::rtm.show', compact('rTM'));
+        return \Inertia\Inertia::render('Spmi/Rtm/Show', [
+            'rTM'          => $rTM,
+            'findingStats' => $findingStats,
+        ]);
     }
 
     public function update(Request $request, RTM $rTM)

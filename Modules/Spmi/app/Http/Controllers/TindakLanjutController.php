@@ -56,7 +56,10 @@ class TindakLanjutController extends Controller
     {
         $temuan  = Temuan::with('audit')->findOrFail($request->temuan_id);
         $petugas = User::where('is_active', true)->orderBy('name')->get();
-        return view('spmi::tindak-lanjut.create', compact('temuan', 'petugas'));
+        return \Inertia\Inertia::render('Spmi/TindakLanjut/Create', [
+            'temuan'  => $temuan,
+            'petugas' => $petugas,
+        ]);
     }
 
     public function store(Request $request)

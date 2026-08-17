@@ -69,7 +69,10 @@ class DokumenController extends Controller
     {
         $kategoris = KategoriDokumen::orderBy('nama')->get();
         $standars  = Standar::where('is_aktif', true)->orderBy('nama')->get();
-        return view('spmi::dokumen.create', compact('kategoris', 'standars'));
+        return \Inertia\Inertia::render('Spmi/Dokumen/Create', [
+            'kategoris' => $kategoris,
+            'standars'  => $standars,
+        ]);
     }
 
     public function store(Request $request)
@@ -114,7 +117,7 @@ class DokumenController extends Controller
             $unitKode = strtoupper(substr(str_replace(' ', '', $request->unit_pemilik), 0, 4));
             $tahun    = now()->year;
             $count    = Dokumen::where('kategori_id', $request->kategori_id)
-                               ->whereYear('created_at', $tahun)->count() + 1;
+                                ->whereYear('created_at', $tahun)->count() + 1;
             
             $kodeDokumen = sprintf('%s/%s/%s/%03d', $kategori->kode, $unitKode, $tahun, $count);
 
@@ -160,14 +163,21 @@ class DokumenController extends Controller
             abort(403, 'Anda tidak memiliki hak akses untuk melihat dokumen ini.');
         }
         $dokumen->load(['kategori', 'standars', 'pembuat']);
-        return view('spmi::dokumen.show', compact('dokumen'));
+        return \Inertia\Inertia::render('Spmi/Dokumen/Show', [
+            'dokumen' => $dokumen,
+        ]);
     }
 
     public function edit(Dokumen $dokumen)
     {
+        $dokumen->load('standars');
         $kategoris = KategoriDokumen::orderBy('nama')->get();
         $standars  = Standar::where('is_aktif', true)->orderBy('nama')->get();
-        return view('spmi::dokumen.edit', compact('dokumen', 'kategoris', 'standars'));
+        return \Inertia\Inertia::render('Spmi/Dokumen/Edit', [
+            'dokumen'   => $dokumen,
+            'kategoris' => $kategoris,
+            'standars'  => $standars,
+        ]);
     }
 
     public function update(Request $request, Dokumen $dokumen)

@@ -57,7 +57,11 @@ class AuditController extends Controller
                          ->where('is_active', true)->with('prodi')->orderBy('name')->get();
         $kodeAudit = Audit::generateKode();
 
-        return view('spmi::audit.create', compact('periodes', 'auditors', 'kodeAudit'));
+        return \Inertia\Inertia::render('Spmi/Audit/Create', [
+            'periodes'  => $periodes,
+            'auditors'  => $auditors,
+            'kodeAudit' => $kodeAudit,
+        ]);
     }
 
     public function store(Request $request)
@@ -156,7 +160,12 @@ class AuditController extends Controller
             'belum' => $audit->checklists->where('status', 'belum_diisi')->count(),
         ];
 
-        return view('spmi::audit.show', compact('audit', 'statsTemuan', 'statsChecklist', 'indikators'));
+        return \Inertia\Inertia::render('Spmi/Audit/Show', [
+            'audit'          => $audit,
+            'statsTemuan'    => $statsTemuan,
+            'statsChecklist' => $statsChecklist,
+            'indikators'     => $indikators,
+        ]);
     }
 
     public function generateChecklist(Audit $audit)
@@ -318,7 +327,12 @@ class AuditController extends Controller
                         ->where('is_active', true)->with('prodi')->orderBy('name')->get();
         $selectedAnggota = $audit->auditors()->wherePivot('peran', 'anggota')->pluck('users.id')->toArray();
 
-        return view('spmi::audit.edit', compact('audit', 'periodes', 'auditors', 'selectedAnggota'));
+        return \Inertia\Inertia::render('Spmi/Audit/Edit', [
+            'audit'           => $audit,
+            'periodes'        => $periodes,
+            'auditors'        => $auditors,
+            'selectedAnggota' => $selectedAnggota,
+        ]);
     }
 
     public function update(Request $request, Audit $audit)
