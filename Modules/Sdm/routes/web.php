@@ -43,6 +43,8 @@ Route::middleware(['auth'])->prefix('sdm')->name('sdm.')->group(function () {
     Route::resource('penilaian-kinerja', PenilaianKinerjaController::class);
 
     // Surat Tugas
+    Route::get('/surat-tugas/{surat_tugas}/pdf', [SuratTugasController::class, 'pdf'])->name('surat-tugas.pdf');
+    Route::get('/surat-tugas/{surat_tugas}/sppd-pdf', [SuratTugasController::class, 'sppdPdf'])->name('surat-tugas.sppd-pdf');
     Route::post('/surat-tugas/{surat_tugas}/approve', [SuratTugasController::class, 'approve'])->name('surat-tugas.approve');
     Route::post('/surat-tugas/{surat_tugas}/reject', [SuratTugasController::class, 'reject'])->name('surat-tugas.reject');
     Route::post('/surat-tugas/{surat_tugas}/complete', [SuratTugasController::class, 'complete'])->name('surat-tugas.complete');

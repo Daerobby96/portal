@@ -5,6 +5,9 @@ namespace Modules\Sdm\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\Sdm\Models\SuratTugas;
 use Modules\Sdm\Models\Pegawai;
+use App\Models\Setting;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -170,6 +173,52 @@ class SuratTugasController extends Controller
         ]);
 
         return back()->with('success', 'Laporan pelaksanaan tugas kedinasan berhasil disimpan.');
+    }
+
+    public function pdf(SuratTugas $suratTugas)
+    {
+        $suratTugas->load(['pegawais', 'createdBy', 'approvedBy']);
+        Setting::clearCache();
+        $setting = [
+            'nama_institusi'   => Setting::get('nama_institusi', 'POLITEKNIK KAMPUS AKADEMIK'),
+            'alamat_institusi' => Setting::get('alamat_institusi', 'Jl. Raya Kampus Terpadu, Indonesia'),
+            'kota_institusi'   => Setting::get('kota_institusi', 'Kota'),
+            'email_institusi'  => Setting::get('email_institusi', 'sdm@polka.ac.id'),
+        ];
+
+        $pejabatDefault = User::role('super_admin')->where('is_active', true)->first();
+
+        $pdf = Pdf::setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => true,
+            'defaultFont'          => 'sans-serif',
+        ])->loadView('sdm::pdf.surat_tugas', compact('suratTugas', 'setting', 'pejabatDefault'))
+          ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Surat_Tugas_' . str_replace(['/', ' '], '_', $suratTugas->nomor_surat) . '.pdf');
+    }
+
+    public function sppdPdf(SuratTugas $suratTugas)
+    {
+        $suratTugas->load(['pegawais', 'createdBy', 'approvedBy']);
+        Setting::clearCache();
+        $setting = [
+            'nama_institusi'   => Setting::get('nama_institusi', 'POLITEKNIK KAMPUS AKADEMIK'),
+            'alamat_institusi' => Setting::get('alamat_institusi', 'Jl. Raya Kampus Terpadu, Indonesia'),
+            'kota_institusi'   => Setting::get('kota_institusi', 'Kota'),
+            'email_institusi'  => Setting::get('email_institusi', 'sdm@polka.ac.id'),
+        ];
+
+        $pejabatDefault = User::role('super_admin')->where('is_active', true)->first();
+
+        $pdf = Pdf::setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => true,
+            'defaultFont'          => 'sans-serif',
+        ])->loadView('sdm::pdf.sppd', compact('suratTugas', 'setting', 'pejabatDefault'))
+          ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('SPPD_' . str_replace(['/', ' '], '_', $suratTugas->nomor_surat) . '.pdf');
     }
 
     private function generateNomorSurat()

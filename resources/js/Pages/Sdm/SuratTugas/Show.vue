@@ -90,6 +90,24 @@ const getPeranLabel = (peran) => {
                 </div>
 
                 <div class="flex items-center gap-3 shrink-0 flex-wrap">
+                    <a
+                        :href="`/sdm/surat-tugas/${suratTugas.id}/pdf`"
+                        target="_blank"
+                        class="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-2 border border-white/20 cursor-pointer backdrop-blur-sm"
+                    >
+                        <i class="bi bi-file-earmark-pdf text-rose-300 text-sm"></i>
+                        <span>Surat Tugas (PDF)</span>
+                    </a>
+
+                    <a
+                        :href="`/sdm/surat-tugas/${suratTugas.id}/sppd-pdf`"
+                        target="_blank"
+                        class="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-2 border border-white/20 cursor-pointer backdrop-blur-sm"
+                    >
+                        <i class="bi bi-car-front text-amber-300 text-sm"></i>
+                        <span>SPPD (PDF)</span>
+                    </a>
+
                     <button
                         v-if="suratTugas.status === 'pending'"
                         @click="approveSurat"
@@ -169,6 +187,39 @@ const getPeranLabel = (peran) => {
 
                 <!-- Right Sidebar -->
                 <div class="space-y-6">
+                    <!-- Cetak Dokumen PDF -->
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+                        <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                            <i class="bi bi-file-earmark-pdf text-rose-500"></i>
+                            Cetak Dokumen Resmi
+                        </h4>
+                        <div class="space-y-2.5">
+                            <a
+                                :href="`/sdm/surat-tugas/${suratTugas.id}/pdf`"
+                                target="_blank"
+                                class="w-full p-3.5 rounded-2xl bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200/70 text-rose-800 transition flex items-center justify-between text-xs font-bold group"
+                            >
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-file-earmark-pdf-fill text-lg text-rose-600"></i>
+                                    <span>Surat Tugas Resmi</span>
+                                </div>
+                                <i class="bi bi-box-arrow-up-right text-rose-400 group-hover:text-rose-700 transition"></i>
+                            </a>
+
+                            <a
+                                :href="`/sdm/surat-tugas/${suratTugas.id}/sppd-pdf`"
+                                target="_blank"
+                                class="w-full p-3.5 rounded-2xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/70 text-amber-900 transition flex items-center justify-between text-xs font-bold group"
+                            >
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-car-front-fill text-lg text-amber-600"></i>
+                                    <span>SPPD (Lembar Perjalanan)</span>
+                                </div>
+                                <i class="bi bi-box-arrow-up-right text-amber-400 group-hover:text-amber-700 transition"></i>
+                            </a>
+                        </div>
+                    </div>
+
                     <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
                         <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Penerbit Surat</h4>
                         <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs text-slate-700 space-y-1">

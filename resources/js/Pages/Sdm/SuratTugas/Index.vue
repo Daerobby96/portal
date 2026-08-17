@@ -216,6 +216,22 @@ const formatDate = (dateStr) => {
                                 </td>
                                 <td class="py-4 px-6 text-right">
                                     <div class="flex items-center justify-end gap-1.5">
+                                        <a
+                                            :href="`/sdm/surat-tugas/${s.id}/pdf`"
+                                            target="_blank"
+                                            class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                                            title="Cetak Surat Tugas PDF"
+                                        >
+                                            <i class="bi bi-file-earmark-pdf text-sm"></i>
+                                        </a>
+                                        <a
+                                            :href="`/sdm/surat-tugas/${s.id}/sppd-pdf`"
+                                            target="_blank"
+                                            class="p-2 rounded-xl text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                                            title="Cetak SPPD PDF"
+                                        >
+                                            <i class="bi bi-car-front text-sm"></i>
+                                        </a>
                                         <button
                                             v-if="s.status === 'pending'"
                                             @click="approveSurat(s)"
