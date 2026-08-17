@@ -142,10 +142,18 @@
                                         <span class="badge bg-secondary">Draft</span>
                                     @endif
                                 </td>
-                                <td class="text-center">
-                                    <a href="{{ route('laporan.export.audit.individual', $audit) }}" class="btn btn-sm btn-outline-danger" target="_blank" title="Export Laporan PDF">
-                                        <i class="bi bi-file-pdf"></i>
-                                    </a>
+                                 <td class="text-center">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a href="{{ route('audit.surat-tugas-pdf', $audit) }}" class="btn btn-sm btn-outline-primary" target="_blank" title="Surat Tugas PDF">
+                                            <i class="bi bi-file-earmark-person"></i>
+                                        </a>
+                                        <a href="{{ route('audit.bapa-pdf', $audit) }}" class="btn btn-sm btn-outline-success" target="_blank" title="Berita Acara (BAPA) PDF">
+                                            <i class="bi bi-clipboard2-check"></i>
+                                        </a>
+                                        <a href="{{ route('laporan.export.audit.individual', $audit) }}" class="btn btn-sm btn-outline-danger" target="_blank" title="Export Laporan Lengkap PDF">
+                                            <i class="bi bi-file-pdf"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             @empty

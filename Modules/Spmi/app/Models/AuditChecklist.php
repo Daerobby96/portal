@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class AuditChecklist extends Model
 {
     protected $fillable = [
-        'audit_id', 'indikator_id', 'pertanyaan',
+        'audit_id', 'indikator_id', 'pertanyaan', 'tahap',
         'status', 'catatan', 'bukti_objektif',
+        'evaluasi_auditee', 'bukti_auditee',
     ];
 
     public function audit(): BelongsTo

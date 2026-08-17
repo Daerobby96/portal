@@ -94,36 +94,50 @@
                         
                         <div class="col-12">
                             <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                                <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Analisa Penyebab <span class="text-danger">*</span></label>
+                                <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Analisa Akar Masalah (Root Cause Analysis) <span class="text-danger">*</span></label>
                                 <button type="button" class="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-gradient-to-r hover:from-violet-700 hover:via-indigo-700 hover:to-blue-700 hover:-translate-y-0.5 hover:shadow-md hover:shadow-indigo-500/20 active:translate-y-0 ai-btn" 
                                     onclick="analyzeAI('root-cause', 'analisa_penyebab')">
                                     <i class="bi bi-cpu text-xs animate-pulse"></i>
-                                    <span>Analisa Penyebab AI</span>
+                                    <span>Bantu Analisa AI (5-Whys)</span>
                                 </button>
                             </div>
-                            <textarea name="analisa_penyebab" id="analisa_penyebab" rows="4" 
+                            <textarea name="analisa_penyebab" id="analisa_penyebab" rows="3" 
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-3 text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 @error('analisa_penyebab') is-invalid @enderror"
-                                placeholder="Tuliskan analisa penyebab terjadinya temuan, atau klik tombol AI di atas untuk rekomendasi cerdas..." required>{{ old('analisa_penyebab') }}</textarea>
+                                placeholder="Tuliskan rumusan akar masalah penyebab temuan, atau klik tombol AI di atas..." required>{{ old('analisa_penyebab') }}</textarea>
                             @error('analisa_penyebab') <div class="invalid-feedback mt-1 text-xs">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-12">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-1">Rincian Metode 5-Whys (Mengapa 1 s/d 5) <span class="text-slate-400 text-[10px]">(Opsional)</span></label>
+                            <textarea name="metode_5_whys" id="metode_5_whys" rows="3"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-xs text-slate-700 font-mono transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                placeholder="Why 1: Mengapa standar tidak tercapai?&#10;Why 2: Mengapa dokumen pendukung belum lengkap?&#10;Why 3: ...">{{ old('metode_5_whys') }}</textarea>
                         </div>
                         
                         <div class="col-12">
                             <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                                <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Rencana Tindakan <span class="text-danger">*</span></label>
+                                <label class="text-xs font-bold uppercase tracking-wider text-slate-400">1. Tindakan Koreksi Langsung (Correction) <span class="text-danger">*</span></label>
                                 <button type="button" class="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-gradient-to-r hover:from-violet-700 hover:via-indigo-700 hover:to-blue-700 hover:-translate-y-0.5 hover:shadow-md hover:shadow-indigo-500/20 active:translate-y-0 ai-btn" 
                                     onclick="analyzeAI('recommendation', 'rencana_tindakan')">
                                     <i class="bi bi-cpu text-xs animate-pulse"></i>
                                     <span>Sugesti Tindakan AI</span>
                                 </button>
                             </div>
-                            <textarea name="rencana_tindakan" id="rencana_tindakan" rows="4" 
+                            <textarea name="rencana_tindakan" id="rencana_tindakan" rows="3" 
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-3 text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 @error('rencana_tindakan') is-invalid @enderror"
-                                placeholder="Tuliskan rencana tindakan penyelesaian, atau gunakan bantuan asisten AI di atas..." required>{{ old('rencana_tindakan') }}</textarea>
+                                placeholder="Langkah perbaikan langsung untuk menyelesaikan temuan..." required>{{ old('rencana_tindakan') }}</textarea>
                             @error('rencana_tindakan') <div class="invalid-feedback mt-1 text-xs">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-12">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">2. Tindakan Pencegahan (Corrective Action to Prevent Recurrence)</label>
+                            <textarea name="tindakan_pencegahan" id="tindakan_pencegahan" rows="3" 
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-3 text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                placeholder="Langkah pencegahan sistemik/SOP/kebijakan agar ketidaksesuaian tidak terulang kembali di masa depan...">{{ old('tindakan_pencegahan') }}</textarea>
                         </div>
                         
                         <div class="col-12">
-                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Bukti Tindakan</label>
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Bukti Tindakan &amp; Dokumen Perbaikan</label>
                             <div class="p-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/30 d-flex flex-column gap-2">
                                 <input type="file" name="bukti_tindakan"
                                     class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 @error('bukti_tindakan') is-invalid @enderror"

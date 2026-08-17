@@ -187,5 +187,51 @@ class RtmController extends Controller
         $filename = 'Laporan-RTM-' . str_replace(' ', '-', $rtm->judul_rapat) . '.pdf';
         return $pdf->stream($filename);
     }
+
+    public function compileAuditData(Request $request)
+    {
+        $periodeId = $request->periode_id ?? session('active_periode_id') ?? \Modules\DataMaster\Models\Periode::where('is_aktif', true)->value('id');
+
+        $audits = \Modules\Spmi\Models\Audit::with(['ketuaAuditor', 'temuans'])
+            ->where('periode_id', $periodeId)
+            ->get();
+
+        $totalAudit = $audits->count();
+        $selesaiAudit = $audits->where('status', 'selesai')->count();
+
+        $temuans = \Modules\Spmi\Models\Temuan::whereHas('audit', fn($q) => $q->where('periode_id', $periodeId))->get();
+        $totalTemuan = $temuans->count();
+        $ktsMayor = $temuans->where('kategori', 'KTS_Mayor')->count();
+        $ktsMinor = $temuans->where('kategori', 'KTS_Minor')->count();
+        $ob = $temuans->where('kategori', 'OB')->count();
+        $rekomendasi = $temuans->where('kategori', 'Rekomendasi')->count();
+        $openCount = $temuans->where('status', 'open')->count();
+        $closedCount = $temuans->whereIn('status', ['closed', 'verified'])->count();
+
+        $unitList = $audits->pluck('unit_yang_diaudit')->unique()->implode(', ');
+
+        $compiledInputAudit = "Rekapitulasi Audit Mutu Internal (AMI) Periode Aktif:\n"
+            . "- Total Audit Terjadwal: {$totalAudit} unit ({$selesaiAudit} selesai).\n"
+            . "- Unit Kerja yang Diaudit: {$unitList}.\n"
+            . "- Total Temuan: {$totalTemuan} (KTS Mayor: {$ktsMayor}, KTS Minor: {$ktsMinor}, Observasi: {$ob}, Rekomendasi: {$rekomendasi}).\n"
+            . "- Status Penyelesaian Temuan: {$closedCount} Closed/Verified, {$openCount} Masih Open/In Progress.\n";
+
+        if ($ktsMayor > 0) {
+            $compiledInputAudit .= "\nCatatan Kritis: Terdapat {$ktsMayor} temuan KTS Mayor yang memerlukan perhatian khusus pimpinan dalam alokasi sumber daya dan perbaikan prosedur operasional.";
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $compiledInputAudit,
+            'stats'   => [
+                'total_audit'   => $totalAudit,
+                'total_temuan'  => $totalTemuan,
+                'kts_mayor'     => $ktsMayor,
+                'kts_minor'     => $ktsMinor,
+                'open_temuan'   => $openCount,
+                'closed_temuan' => $closedCount,
+            ],
+        ]);
+    }
 }
 

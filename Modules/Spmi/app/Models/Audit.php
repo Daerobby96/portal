@@ -20,18 +20,28 @@ class Audit extends Model
         'ketua_auditor_id', 'tanggal_audit', 'tanggal_selesai',
         'status', 'lingkup_audit', 'tujuan_audit', 'catatan',
         'opening_meeting', 'closing_meeting', 'ai_summary',
+        'nomor_surat_tugas', 'tgl_surat_tugas', 'penandatangan_surat_tugas', 'jabatan_penandatangan',
+        'bapa_signed_at_auditor', 'bapa_signed_at_auditee', 'bapa_signed_by_auditee_id', 'bapa_catatan',
     ];
 
     protected $casts = [
-        'tanggal_audit'     => 'date',
-        'tanggal_selesai'   => 'date',
-        'opening_meeting'   => 'datetime',
-        'closing_meeting'   => 'datetime',
+        'tanggal_audit'           => 'date',
+        'tanggal_selesai'         => 'date',
+        'tgl_surat_tugas'         => 'date',
+        'opening_meeting'         => 'datetime',
+        'closing_meeting'         => 'datetime',
+        'bapa_signed_at_auditor'  => 'datetime',
+        'bapa_signed_at_auditee'  => 'datetime',
     ];
 
     public function periode(): BelongsTo
     {
         return $this->belongsTo(Periode::class);
+    }
+
+    public function bapaAuditee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'bapa_signed_by_auditee_id');
     }
 
     public function ketuaAuditor(): BelongsTo

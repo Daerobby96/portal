@@ -12,7 +12,7 @@ class Periode extends Model
     protected $fillable = [
         'nama', 'tahun', 'semester',
         'tanggal_mulai', 'tanggal_selesai',
-        'is_aktif', 'keterangan',
+        'is_aktif', 'keterangan', 'siklus_spmi_id',
     ];
 
     protected $casts = [
@@ -20,6 +20,11 @@ class Periode extends Model
         'tanggal_selesai' => 'date',
         'is_aktif'        => 'boolean',
     ];
+
+    public function siklus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\Modules\Spmi\Models\SiklusSpmi::class, 'siklus_spmi_id');
+    }
 
     public function audits(): HasMany
     {

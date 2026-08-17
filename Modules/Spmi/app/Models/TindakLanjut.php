@@ -11,8 +11,8 @@ class TindakLanjut extends Model
     use \App\Traits\Loggable;
 
     protected $fillable = [
-        'temuan_id', 'penanggung_jawab_id', 'analisa_penyebab',
-        'rencana_tindakan', 'target_selesai', 'tanggal_realisasi',
+        'temuan_id', 'penanggung_jawab_id', 'analisa_penyebab', 'metode_5_whys',
+        'rencana_tindakan', 'tindakan_pencegahan', 'target_selesai', 'tanggal_realisasi',
         'bukti_tindakan', 'status', 'verifikasi_auditor',
         'hasil_verifikasi', 'verifikator_id', 'tanggal_verifikasi',
     ];

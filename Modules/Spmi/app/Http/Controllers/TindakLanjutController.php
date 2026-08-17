@@ -62,7 +62,9 @@ class TindakLanjutController extends Controller
             'temuan_id'           => 'required|exists:temuans,id',
             'penanggung_jawab_id' => 'required|exists:users,id',
             'analisa_penyebab'    => 'required|string',
+            'metode_5_whys'       => 'nullable|string',
             'rencana_tindakan'    => 'required|string',
+            'tindakan_pencegahan' => 'nullable|string',
             'target_selesai'      => 'required|date|after:today',
             'bukti_tindakan'      => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:10240',
         ]);
@@ -76,7 +78,9 @@ class TindakLanjutController extends Controller
             'temuan_id'           => $request->temuan_id,
             'penanggung_jawab_id' => $request->penanggung_jawab_id,
             'analisa_penyebab'    => $request->analisa_penyebab,
+            'metode_5_whys'       => $request->metode_5_whys,
             'rencana_tindakan'    => $request->rencana_tindakan,
+            'tindakan_pencegahan' => $request->tindakan_pencegahan,
             'target_selesai'      => $request->target_selesai,
             'bukti_tindakan'      => $buktiPath,
             'status'              => 'proses',
@@ -86,7 +90,7 @@ class TindakLanjutController extends Controller
         Temuan::find($request->temuan_id)->update(['status' => 'in_progress']);
 
         return redirect()->route('tindak-lanjut.index')
-            ->with('success', 'Tindak lanjut berhasil disimpan.');
+            ->with('success', 'Tindak lanjut (PTK) berhasil disimpan.');
     }
 
     public function show(TindakLanjut $tindakLanjut)
@@ -107,7 +111,9 @@ class TindakLanjutController extends Controller
         $request->validate([
             'penanggung_jawab_id' => 'required|exists:users,id',
             'analisa_penyebab'    => 'required|string',
+            'metode_5_whys'       => 'nullable|string',
             'rencana_tindakan'    => 'required|string',
+            'tindakan_pencegahan' => 'nullable|string',
             'target_selesai'      => 'required|date',
             'tanggal_realisasi'   => 'nullable|date',
             'status'              => 'required|in:pending,proses,selesai',
@@ -115,7 +121,8 @@ class TindakLanjutController extends Controller
         ]);
 
         $data = $request->only([
-            'penanggung_jawab_id', 'analisa_penyebab', 'rencana_tindakan',
+            'penanggung_jawab_id', 'analisa_penyebab', 'metode_5_whys',
+            'rencana_tindakan', 'tindakan_pencegahan',
             'target_selesai', 'tanggal_realisasi', 'status',
         ]);
 

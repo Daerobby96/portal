@@ -146,6 +146,45 @@
                             @error('tanggal_selesai') <div class="invalid-feedback mt-1 text-xs">{{ $message }}</div> @enderror
                         </div>
 
+                        {{-- Administrasi Surat Tugas --}}
+                        <div class="col-12 mt-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 d-flex align-items-center gap-1.5 pb-2 border-b border-slate-100">
+                                <i class="bi bi-file-earmark-text text-primary fs-6"></i>
+                                <span>Administrasi Surat Tugas Auditor</span>
+                            </span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Nomor Surat Tugas</label>
+                            <input type="text" name="nomor_surat_tugas"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                value="{{ old('nomor_surat_tugas', $audit->nomor_surat_tugas ?? ($audit->kode_audit . '/ST-AMI/' . date('Y'))) }}"
+                                placeholder="Nomor Surat Tugas">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Tanggal Surat Tugas</label>
+                            <input type="date" name="tgl_surat_tugas"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                value="{{ old('tgl_surat_tugas', $audit->tgl_surat_tugas ? \Carbon\Carbon::parse($audit->tgl_surat_tugas)->format('Y-m-d') : date('Y-m-d')) }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Nama Penandatangan Surat</label>
+                            <input type="text" name="penandatangan_surat_tugas"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                value="{{ old('penandatangan_surat_tugas', $audit->penandatangan_surat_tugas) }}"
+                                placeholder="Nama Penandatangan (Ketua LPM / Pimpinan)">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Jabatan Penandatangan</label>
+                            <input type="text" name="jabatan_penandatangan"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                value="{{ old('jabatan_penandatangan', $audit->jabatan_penandatangan ?? 'Ketua Lembaga Penjaminan Mutu') }}"
+                                placeholder="Jabatan">
+                        </div>
+
                         {{-- Detail Tambahan --}}
                         <div class="col-12 mt-4">
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-400 d-flex align-items-center gap-1.5 pb-2 border-b border-slate-100">
@@ -167,6 +206,12 @@
                         <div class="col-12">
                             <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Catatan Tambahan</label>
                             <textarea name="catatan" rows="2.5" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10">{{ old('catatan', $audit->catatan) }}</textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Catatan Khusus Closing Meeting (BAPA)</label>
+                            <textarea name="bapa_catatan" rows="2" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                placeholder="Catatan kesepakatan closing meeting atau saran pimpinan...">{{ old('bapa_catatan', $audit->bapa_catatan) }}</textarea>
                         </div>
 
                         <div class="col-12 d-flex gap-2 justify-content-end pt-3 border-t border-slate-100">

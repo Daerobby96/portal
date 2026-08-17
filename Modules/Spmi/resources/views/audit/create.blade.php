@@ -134,6 +134,45 @@
                         {{-- Detail Tambahan --}}
                         <div class="col-12 mt-4">
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-400 d-flex align-items-center gap-1.5 pb-2 border-b border-slate-100">
+                                <i class="bi bi-file-earmark-text text-primary fs-6"></i>
+                                <span>Administrasi Surat Tugas Auditor</span>
+                            </span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Nomor Surat Tugas <span class="text-slate-400 text-[10px]">(Opsional / Otomatis)</span></label>
+                            <input type="text" name="nomor_surat_tugas"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                value="{{ old('nomor_surat_tugas', $kodeAudit . '/ST-AMI/' . date('Y')) }}"
+                                placeholder="Contoh: 045/LPM/ST-AMI/2026">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Tanggal Surat Tugas</label>
+                            <input type="date" name="tgl_surat_tugas"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                value="{{ old('tgl_surat_tugas', date('Y-m-d')) }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Nama Penandatangan Surat</label>
+                            <input type="text" name="penandatangan_surat_tugas"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                value="{{ old('penandatangan_surat_tugas') }}"
+                                placeholder="Nama Ketua LPM / Pimpinan">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Jabatan Penandatangan</label>
+                            <input type="text" name="jabatan_penandatangan"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                value="{{ old('jabatan_penandatangan', 'Ketua Lembaga Penjaminan Mutu') }}"
+                                placeholder="Jabatan">
+                        </div>
+
+                        {{-- Lingkup & Detail --}}
+                        <div class="col-12 mt-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 d-flex align-items-center gap-1.5 pb-2 border-b border-slate-100">
                                 <i class="bi bi-file-text-fill text-primary fs-6"></i>
                                 <span>Lingkup & Detail Tambahan</span>
                             </span>
@@ -142,7 +181,7 @@
                         <div class="col-12">
                             <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">Lingkup Audit</label>
                             <textarea name="lingkup_audit" rows="2" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
-                                placeholder="Jelaskan ruang lingkup audit... Contoh: Kurikulum, SDM, Sarpras">{{ old('lingkup_audit') }}</textarea>
+                                placeholder="Jelaskan ruang lingkup audit... Contoh: Standar Pendidikan, Standar Penelitian, Standar Sarpras">{{ old('lingkup_audit') }}</textarea>
                         </div>
 
                         <div class="col-12">

@@ -74,7 +74,13 @@
 
                     <div class="row g-4">
                         <div class="col-md-6 text-section">
-                            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 d-block mb-2">1. Hasil Audit Internal</label>
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                <label class="text-xs font-bold uppercase tracking-wider text-slate-400">1. Hasil Audit Internal</label>
+                                <button type="button" class="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200 px-2.5 py-1 text-[11px] font-bold hover:bg-blue-100 transition-all" onclick="pullAuditData()">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    <span>Tarik Data AMI Otomatis</span>
+                                </button>
+                            </div>
                             <textarea name="input_audit_internal" id="input_audit_internal" rows="4" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-3 text-slate-700 transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10" placeholder="Ringkasan temuan dan efektivitas audit...">{{ old('input_audit_internal') }}</textarea>
                         </div>
                         <div class="col-md-6 text-section">
@@ -247,6 +253,29 @@ async function generateRtmDraftAI() {
     } catch (e) {
         console.error(e);
         alert('Terjadi kesalahan koneksi saat merumuskan keputusan RTM.');
+    } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+}
+
+async function pullAuditData() {
+    const btn = event.currentTarget;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span>Menarik...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('{{ route("rtm.compile-audit-data") }}');
+        const result = await response.json();
+        if (result.success && result.data) {
+            document.getElementById('input_audit_internal').value = result.data;
+        } else {
+            alert('Tidak ditemukan data temuan audit internal pada periode ini.');
+        }
+    } catch(e) {
+        console.error(e);
+        alert('Gagal mengambil data audit internal.');
     } finally {
         btn.innerHTML = originalHtml;
         btn.disabled = false;

@@ -18,8 +18,15 @@ use Modules\Spmi\Http\Controllers\IkuResmiController;
 use Modules\Spmi\Http\Controllers\LaporanController;
 use Modules\Spmi\Http\Controllers\AiController;
 use Modules\Spmi\Http\Controllers\IntegrationDashboardController;
+use Modules\Spmi\Http\Controllers\SiklusSpmiController;
 
 Route::middleware(['auth'])->group(function () {
+    // ── Siklus Mutu SPMI ─────────────────────────────────────────
+    Route::middleware('role:super_admin,auditor,pimpinan')->group(function () {
+        Route::resource('siklus-spmi', SiklusSpmiController::class);
+        Route::post('siklus-spmi/{siklusSpmi}/close', [SiklusSpmiController::class, 'close'])->name('siklus-spmi.close');
+    });
+
     // ── Pengisian Kuesioner (Public / All Users) ──────────────────
     Route::get('/survei/aktif', [UserKuesionerController::class, 'activeSurvey'])->name('user-kuesioner.active');
     Route::get('/survei', [UserKuesionerController::class, 'index'])->name('user-kuesioner.index');
@@ -27,6 +34,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/survei/{kuesioner}', [UserKuesionerController::class, 'submit'])->name('user-kuesioner.submit');
 
     // ── Audit Mutu Internal ────────────────────────────────────────
+
+    Route::middleware('role:super_admin,auditor,pimpinan,auditee,kaprodi')->group(function () {
+        Route::get('audit/{audit}/surat-tugas-pdf', [AuditController::class, 'suratTugasPdf'])->name('audit.surat-tugas-pdf');
+        Route::get('audit/{audit}/bapa-pdf', [AuditController::class, 'bapaPdf'])->name('audit.bapa-pdf');
+        Route::post('audit/{audit}/sign-bapa', [AuditController::class, 'signBapa'])->name('audit.sign-bapa');
+        Route::put('audit/{audit}/desk-evaluation/{checklist}', [AuditController::class, 'updateDeskEvaluation'])->name('audit.update-desk-evaluation');
+    });
 
     Route::middleware('role:super_admin,auditor,pimpinan')->group(function () {
         Route::post('audit/checklist-inline', [AuditController::class, 'updateChecklistInline'])->name('audit.checklist-inline');
@@ -36,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('audit/{audit}/checklist/{checklist}', [AuditController::class, 'updateChecklist'])
             ->name('audit.update-checklist');
         Route::resource('audit.temuan', TemuanController::class);
+        Route::get('rtm/compile-audit-data', [RtmController::class, 'compileAuditData'])->name('rtm.compile-audit-data');
         Route::resource('rtm', RtmController::class);
         Route::get('rtm/{rtm}/pdf', [RtmController::class, 'exportPdf'])->name('rtm.pdf');
         Route::post('temuan/{temuan}/verifikasi', [TemuanController::class, 'verifikasi'])
@@ -45,7 +60,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Tindak lanjut (auditee juga bisa input)
-    Route::middleware('role:super_admin,auditor,auditee,pimpinan')->group(function () {
+    Route::middleware('role:super_admin,auditor,auditee,pimpinan,kaprodi')->group(function () {
         Route::resource('tindak-lanjut', TindakLanjutController::class);
     });
 
