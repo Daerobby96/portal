@@ -87,8 +87,12 @@ class KuesionerController extends Controller
 
     public function edit(Kuesioner $kuesioner)
     {
+        $kuesioner->load(['pertanyaans', 'jawabans']);
         $periodes = Periode::orderBy('tahun', 'desc')->get();
-        return view('spmi::kuesioner.edit', compact('kuesioner', 'periodes'));
+        return \Inertia\Inertia::render('Spmi/Kuesioner/Edit', [
+            'kuesioner' => $kuesioner,
+            'periodes'  => $periodes,
+        ]);
     }
 
     public function update(Request $request, Kuesioner $kuesioner)
