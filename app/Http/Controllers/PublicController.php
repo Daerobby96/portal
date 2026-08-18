@@ -61,7 +61,12 @@ class PublicController extends Controller
             }
         }
         
-        return view('public.index', compact('stats', 'periode', 'capaianPerStandar', 'publicKuesioners'));
+        return \Inertia\Inertia::render('Public/Index', [
+            'stats' => $stats,
+            'periode' => $periode,
+            'capaianPerStandar' => $capaianPerStandar,
+            'publicKuesioners' => $publicKuesioners,
+        ]);
     }
 
     public function documents(Request $request)
@@ -70,11 +75,18 @@ class PublicController extends Controller
             ->where('is_public', true)
             ->with('kategori', 'standar');
         if ($request->filled('search')) {
-            $query->where('judul', 'like', '%' . $request->search . '%')
-                ->orWhere('kode_dokumen', 'like', '%' . $request->search . '%');
+            $query->where(function($q) use ($request) {
+                $q->where('judul', 'ilike', '%' . $request->search . '%')
+                  ->orWhere('kode_dokumen', 'ilike', '%' . $request->search . '%');
+            });
         }
-        $documents = $query->latest()->paginate(12);
+        $documents = $query->latest()->paginate(12)->withQueryString();
         
-        return view('public.documents', compact('documents'));
+        return \Inertia\Inertia::render('Public/Documents', [
+            'documents' => $documents,
+            'filters' => [
+                'search' => $request->search,
+            ],
+        ]);
     }
 }

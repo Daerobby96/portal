@@ -29,7 +29,7 @@ const toggleSidebar = () => {
                                 P
                             </div>
                             <div>
-                                <span class="font-bold text-slate-900 text-base tracking-tight">ERP-POLKA</span>
+                                <span class="font-bold text-slate-900 text-base tracking-tight">PINTAR</span>
                                 <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                                     Vue 3 + Inertia
                                 </span>

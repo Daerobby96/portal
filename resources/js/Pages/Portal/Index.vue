@@ -92,7 +92,7 @@ const getIconGradient = (color) => {
                 </div>
                 <div>
                     <span class="font-extrabold text-slate-900 text-base tracking-tight block">
-                        {{ appSettings?.appName || 'ERP-POLKA' }}
+                        {{ appSettings?.appName || 'PINTAR' }}
                     </span>
                     <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                         Portal Layanan Terpadu

@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('program_studis', function (Blueprint $table) {
+            $table->id();
+            $table->string('kode', 20)->unique();
+            $table->string('nama', 100);
+            $table->string('jenjang', 20)->default('D3'); // D3, D4, S1
+            $table->string('akreditasi', 20)->nullable();
+            $table->boolean('is_aktif')->default(true);
+            $table->string('warna', 20)->nullable();
+            $table->string('icon', 50)->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('program_studis');
+    }
+};

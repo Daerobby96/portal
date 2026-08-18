@@ -26,9 +26,14 @@ class StandarController extends Controller
             $query->where('bidang', $request->bidang);
         }
 
-        $perPage = $request->integer('per_page', 10);
-        if (!in_array($perPage, [10, 20, 25, 50, 100])) {
-            $perPage = 10;
+        $perPageParam = $request->get('per_page', '15');
+        if ($perPageParam === 'all' || $perPageParam === 'semua' || $perPageParam === '-1') {
+            $perPage = 1000;
+        } else {
+            $perPage = (int)$perPageParam;
+            if (!in_array($perPage, [10, 15, 20, 25, 50, 100, 1000])) {
+                $perPage = 15;
+            }
         }
         $standars = $query->orderBy('kode')->paginate($perPage)->withQueryString();
 
@@ -45,6 +50,11 @@ class StandarController extends Controller
             'standars'      => $standars,
             'bidangOptions' => $bidangOptions,
             'summary'       => $summary,
+            'filters'       => [
+                'search'   => $request->search ?? '',
+                'bidang'   => $request->bidang ?? '',
+                'per_page' => (string)$perPageParam,
+            ],
         ]);
     }
 

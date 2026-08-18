@@ -76,58 +76,87 @@ class UserKuesionerController extends Controller
             return redirect()->route('user-kuesioner.index')->with('error', 'Kuesioner ini tidak aktif.');
         }
 
-        // Proteksi pengisian ganda
+        // Proteksi pengisian ganda jika login
         if (auth()->check() && $kuesioner->isFilledBy(auth()->id())) {
             return redirect()->route('user-kuesioner.index')->with('error', 'Anda sudah mengisi kuesioner ini.');
         }
         
-        $cookieName = 'filled_kuesioner_' . $kuesioner->id;
-        if (request()->cookie($cookieName)) {
-            return redirect()->route('user-kuesioner.index')->with('error', 'Anda sudah mengisi kuesioner ini.');
-        }
-
         $kuesioner->load('pertanyaans');
+
+        $prodis = class_exists(\Modules\DataMaster\Models\ProgramStudi::class)
+            ? \Modules\DataMaster\Models\ProgramStudi::where('is_aktif', true)->orderBy('jenjang')->orderBy('nama')->get(['id', 'nama', 'jenjang'])
+            : [];
+
         return \Inertia\Inertia::render('Spmi/UserKuesioner/Fill', [
             'kuesioner' => $kuesioner,
+            'prodis'    => $prodis,
         ]);
     }
 
     public function submit(Request $request, Kuesioner $kuesioner)
     {
-        // Proteksi pengisian ganda
+        // Proteksi pengisian ganda jika login
         if (auth()->check() && $kuesioner->isFilledBy(auth()->id())) {
              return redirect()->route('user-kuesioner.index')->with('error', 'Anda sudah mengirim jawaban.');
         }
-        
-        $cookieName = 'filled_kuesioner_' . $kuesioner->id;
-        if (request()->cookie($cookieName)) {
-            return redirect()->route('user-kuesioner.index')->with('error', 'Anda sudah mengirim jawaban.');
+
+        $isExternalSurvey = in_array($kuesioner->id, [11, 12]) || str_contains(strtolower($kuesioner->judul), 'pengguna lulusan') || str_contains(strtolower($kuesioner->judul), 'mitra');
+
+        $rules = [
+            'kategori_responden' => 'nullable|string|max:100',
+            'identitas_nomor'    => 'nullable|string|max:100',
+            'program_studi'      => 'nullable|string|max:255',
+            'angkatan_semester'  => 'nullable|string|max:100',
+            'instansi'           => $isExternalSurvey ? 'required|string|max:255' : 'nullable|string|max:255',
+            'jabatan'            => 'nullable|string|max:255',
+            'email_responden'    => 'nullable|email|max:255',
+            'no_hp_responden'    => 'nullable|string|max:50',
+            'jawaban'            => 'required|array',
+        ];
+
+        if ($isExternalSurvey) {
+            $rules['nama_responden'] = 'required|string|max:255';
+        } else {
+            $rules['nama_responden'] = 'nullable|string|max:255';
         }
 
-        $request->validate([
-            'jawaban' => 'required|array',
-        ]);
+        $request->validate($rules);
 
-        DB::transaction(function() use ($request, $kuesioner) {
+        $namaResponden = $request->nama_responden;
+        if ($request->boolean('is_anonymous') || empty(trim($namaResponden ?? ''))) {
+            $namaResponden = 'Anonim (' . ($request->kategori_responden ?? 'Responden') . ')';
+        }
+
+        DB::transaction(function() use ($request, $kuesioner, $namaResponden) {
             $jawabanHeader = KuesionerJawaban::create([
-                'kuesioner_id' => $kuesioner->id,
-                'user_id' => auth()->id(), // NULL jika guest
-                'filled_at' => now(),
+                'kuesioner_id'       => $kuesioner->id,
+                'user_id'            => auth()->id(), // NULL jika tamu/mahasiswa/tendik publik
+                'nama_responden'     => $namaResponden,
+                'identitas_nomor'    => $request->boolean('is_anonymous') ? null : $request->identitas_nomor,
+                'kategori_responden' => $request->kategori_responden,
+                'program_studi'      => $request->program_studi,
+                'angkatan_semester'  => $request->angkatan_semester,
+                'instansi'           => $request->instansi,
+                'jabatan'            => $request->jabatan,
+                'email_responden'    => $request->boolean('is_anonymous') ? null : $request->email_responden,
+                'no_hp_responden'    => $request->boolean('is_anonymous') ? null : $request->no_hp_responden,
+                'filled_at'          => now(),
             ]);
 
             foreach ($request->jawaban as $pertanyaanId => $val) {
                 KuesionerJawabanDetail::create([
-                    'jawaban_id' => $jawabanHeader->id,
+                    'jawaban_id'    => $jawabanHeader->id,
                     'pertanyaan_id' => $pertanyaanId,
-                    'skor' => is_numeric($val) ? $val : null,
-                    'jawaban_text' => !is_numeric($val) ? $val : null,
+                    'skor'          => is_numeric($val) ? $val : null,
+                    'jawaban_text'  => !is_numeric($val) ? $val : null,
                 ]);
             }
         });
 
-        // Set cookie selama 30 hari untuk mencegah pengisian ulang oleh guest
+        $cookieName = 'filled_kuesioner_' . $kuesioner->id;
+
         return redirect()->route('user-kuesioner.index')
-            ->with('success', 'Terima kasih! Jawaban Anda telah tersimpan.')
+            ->with('success', 'Terima kasih! Jawaban kuesioner Anda telah berhasil tersimpan dengan aman.')
             ->withCookie(cookie($cookieName, 'true', 43200)); 
     }
 }

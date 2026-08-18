@@ -3,7 +3,7 @@
 namespace Modules\Kerjasama\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use App\Http\Controllers\Controller;
 use Modules\Kerjasama\Models\Kerjasama;
 use Modules\Kerjasama\Models\EvaluasiMitra;
 
@@ -13,8 +13,8 @@ class EvaluasiMitraController extends Controller
     {
         $validated = $request->validate([
             'tanggal_evaluasi' => 'required|date',
-            'nilai' => 'required|integer|min:1|max:5',
-            'catatan' => 'nullable|string',
+            'nilai'            => 'required|integer|min:1|max:5',
+            'catatan'          => 'nullable|string',
         ]);
 
         $validated['kerjasama_id'] = $kerjasama->id;
@@ -22,13 +22,13 @@ class EvaluasiMitraController extends Controller
 
         EvaluasiMitra::create($validated);
 
-        return redirect()->route('kerjasama.show', $kerjasama)->with('success', 'Evaluasi berhasil ditambahkan.');
+        return back()->with('success', 'Evaluasi mitra berhasil ditambahkan.');
     }
 
     public function destroy(Kerjasama $kerjasama, EvaluasiMitra $evaluasi)
     {
         $evaluasi->delete();
 
-        return redirect()->route('kerjasama.show', $kerjasama)->with('success', 'Evaluasi berhasil dihapus.');
+        return back()->with('success', 'Evaluasi mitra berhasil dihapus.');
     }
 }

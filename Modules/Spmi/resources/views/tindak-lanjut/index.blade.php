@@ -102,6 +102,10 @@
                 </div>
             </div>
             <div class="col text-end d-flex gap-2 justify-content-end">
+                <a href="{{ route('cetak.laporan-rtl') }}" target="_blank" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-700 hover:-translate-y-0.5 hover:shadow-md hover:shadow-emerald-600/20 active:translate-y-0">
+                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                    <span>Cetak RTL (A4)</span>
+                </a>
                 <button class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/20 active:translate-y-0">
                     <i class="bi bi-search"></i>
                     <span>Cari</span>

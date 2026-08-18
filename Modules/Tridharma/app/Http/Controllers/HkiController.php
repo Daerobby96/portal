@@ -7,6 +7,7 @@ use Modules\Sdm\Models\Pegawai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
+use Inertia\Inertia;
 
 class HkiController extends Controller
 {
@@ -18,6 +19,7 @@ class HkiController extends Controller
             $q = $request->search;
             $query->where(function ($sq) use ($q) {
                 $sq->where('judul_hki', 'ilike', "%{$q}%")
+                   ->orWhere('nomor_pencatatan', 'ilike', "%{$q}%")
                    ->orWhereHas('pegawai', function ($q2) use ($q) {
                        $q2->where('nama', 'ilike', "%{$q}%")
                           ->orWhere('nip', 'ilike', "%{$q}%");
@@ -31,21 +33,44 @@ class HkiController extends Controller
             $query->where('status', $request->status);
         }
 
-        $hkis = $query->paginate(15)->withQueryString();
+        $hkis = $query->paginate(15)->through(fn($h) => [
+            'id'               => $h->id,
+            'judul_hki'        => $h->judul_hki,
+            'jenis_hki'        => $h->jenis_hki,
+            'nomor_pencatatan' => $h->nomor_pencatatan,
+            'tahun_terbit'     => $h->tahun_terbit,
+            'status'           => $h->status,
+            'keterangan'       => $h->keterangan,
+            'sertifikat_url'   => $h->sertifikat ? asset('storage/' . $h->sertifikat) : null,
+            'pegawai_id'       => $h->pegawai_id,
+            'pegawai_nama'     => $h->pegawai?->nama,
+            'pegawai_nip'      => $h->pegawai?->nip,
+        ])->withQueryString();
         
         $stats = [
-            'total' => Hki::count(),
+            'total'   => Hki::count(),
             'granted' => Hki::where('status', 'Granted/Sertifikat')->count(),
-            'paten' => Hki::whereIn('jenis_hki', ['Paten', 'Paten Sederhana'])->count(),
+            'paten'   => Hki::whereIn('jenis_hki', ['Paten', 'Paten Sederhana'])->count(),
         ];
 
-        return view('hki.index', compact('hkis', 'stats'));
+        return Inertia::render('Tridharma/Hki/Index', [
+            'hkis'         => $hkis,
+            'stats'        => $stats,
+            'jenisOptions' => Hki::JENIS_HKI,
+            'statusOptions'=> Hki::STATUS,
+            'filters'      => $request->only(['search', 'jenis_hki', 'status']),
+        ]);
     }
 
     public function create()
     {
-        $pegawais = Pegawai::where('is_aktif', true)->orderBy('nama')->get();
-        return view('hki.create', compact('pegawais'));
+        $pegawais = Pegawai::where('is_aktif', true)->orderBy('nama')->get(['id', 'nama', 'nip', 'unit_kerja']);
+
+        return Inertia::render('Tridharma/Hki/Create', [
+            'pegawais'      => $pegawais,
+            'jenisOptions'  => Hki::JENIS_HKI,
+            'statusOptions' => Hki::STATUS,
+        ]);
     }
 
     public function store(Request $request)
@@ -72,8 +97,24 @@ class HkiController extends Controller
 
     public function edit(Hki $hki)
     {
-        $pegawais = Pegawai::where('is_aktif', true)->orderBy('nama')->get();
-        return view('hki.edit', compact('hki', 'pegawais'));
+        $pegawais = Pegawai::where('is_aktif', true)->orderBy('nama')->get(['id', 'nama', 'nip', 'unit_kerja']);
+
+        return Inertia::render('Tridharma/Hki/Edit', [
+            'hki' => [
+                'id'               => $hki->id,
+                'pegawai_id'       => $hki->pegawai_id,
+                'judul_hki'        => $hki->judul_hki,
+                'jenis_hki'        => $hki->jenis_hki,
+                'nomor_pencatatan' => $hki->nomor_pencatatan,
+                'tahun_terbit'     => $hki->tahun_terbit,
+                'status'           => $hki->status,
+                'keterangan'       => $hki->keterangan,
+                'sertifikat_url'   => $hki->sertifikat ? asset('storage/' . $hki->sertifikat) : null,
+            ],
+            'pegawais'      => $pegawais,
+            'jenisOptions'  => Hki::JENIS_HKI,
+            'statusOptions' => Hki::STATUS,
+        ]);
     }
 
     public function update(Request $request, Hki $hki)
@@ -110,3 +151,4 @@ class HkiController extends Controller
         return redirect()->route('hki.index')->with('success', 'Data HKI / Paten berhasil dihapus.');
     }
 }
+

@@ -14,9 +14,14 @@ class EvaluasiController extends Controller
         $periodeSel = \Modules\DataMaster\Models\Periode::find($request->periode_id) ?? \Modules\DataMaster\Models\Periode::aktif();
         
         $query = Monitoring::where('periode_id', $periodeSel?->id)
-                            ->with(['indikator.standar', 'evaluasi', 'pelapor'])
-                            ->whereIn('status', ['submitted', 'verified'])
-                            ->latest();
+            ->whereNotNull('nilai_capaian')
+            ->with(['indikator.standar', 'evaluasi', 'pelapor'])
+            ->leftJoin('indikator_kinerjas', 'monitorings.indikator_id', '=', 'indikator_kinerjas.id')
+            ->leftJoin('standars', 'indikator_kinerjas.standar_id', '=', 'standars.id')
+            ->select('monitorings.*')
+            ->orderBy('standars.kode')
+            ->orderByRaw("CASE WHEN indikator_kinerjas.tipe = 'IKU' THEN 1 WHEN indikator_kinerjas.tipe = 'IKT' THEN 2 ELSE 3 END")
+            ->orderBy('indikator_kinerjas.kode');
 
         if ($request->filled('hasil')) {
             $query->whereHas('evaluasi', fn($q) => $q->where('hasil', $request->hasil));
@@ -26,6 +31,7 @@ class EvaluasiController extends Controller
         $periodes    = \Modules\DataMaster\Models\Periode::orderByDesc('tahun')->get();
 
         $stats = [
+            'total'           => $monitorings->count(),
             'tercapai'        => $monitorings->filter(fn($m) => $m->evaluasi && $m->evaluasi->hasil === 'tercapai')->count(),
             'tidak_tercapai'  => $monitorings->filter(fn($m) => $m->evaluasi && $m->evaluasi->hasil === 'tidak_tercapai')->count(),
             'perlu_perhatian' => $monitorings->filter(fn($m) => $m->evaluasi && $m->evaluasi->hasil === 'perlu_perhatian')->count(),
@@ -42,10 +48,15 @@ class EvaluasiController extends Controller
 
     public function create(Request $request)
     {
-        $monitorings = Monitoring::with(['indikator', 'periode'])
+        $monitorings = Monitoring::whereNotNull('nilai_capaian')
             ->doesntHave('evaluasi')
-            ->where('status', 'submitted')
-            ->orderBy('tanggal_input', 'desc')
+            ->with(['indikator.standar', 'periode'])
+            ->leftJoin('indikator_kinerjas', 'monitorings.indikator_id', '=', 'indikator_kinerjas.id')
+            ->leftJoin('standars', 'indikator_kinerjas.standar_id', '=', 'standars.id')
+            ->select('monitorings.*')
+            ->orderBy('standars.kode')
+            ->orderByRaw("CASE WHEN indikator_kinerjas.tipe = 'IKU' THEN 1 WHEN indikator_kinerjas.tipe = 'IKT' THEN 2 ELSE 3 END")
+            ->orderBy('indikator_kinerjas.kode')
             ->get();
 
         $selected = $request->filled('monitoring_id')
@@ -150,5 +161,31 @@ class EvaluasiController extends Controller
             'success' => true,
             'message' => 'Evaluasi berhasil diperbarui.',
         ]);
+    }
+
+    public function generateAi(Request $request, \Modules\Spmi\Services\AiEvaluasiService $aiService)
+    {
+        $request->validate([
+            'monitoring_id' => 'required|exists:monitorings,id',
+        ]);
+
+        $monitoring = Monitoring::with(['indikator.standar'])->findOrFail($request->monitoring_id);
+        $indikator  = $monitoring->indikator;
+        $standar    = $indikator?->standar;
+
+        $result = $aiService->generateEvaluation([
+            'indikator_kode'   => $indikator?->kode,
+            'indikator_nama'   => $indikator?->nama,
+            'target_nilai'     => (float)($indikator?->target_nilai ?? 0),
+            'target_deskripsi' => $indikator?->target_deskripsi,
+            'nilai_capaian'    => (float)($monitoring->nilai_capaian ?? 0),
+            'unit_pengukuran'  => $indikator?->unit_pengukuran ?? '%',
+            'unit_kerja'       => $indikator?->unit_kerja ?? 'Program Studi',
+            'standar_kode'     => $standar?->kode,
+            'standar_nama'     => $standar?->nama,
+            'bidang'           => $standar?->bidang ?? 'pendidikan',
+        ]);
+
+        return response()->json($result);
     }
 }

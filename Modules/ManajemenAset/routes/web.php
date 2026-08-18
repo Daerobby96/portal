@@ -15,14 +15,14 @@ Route::middleware(['auth'])->group(function () {
         return redirect()->route('aset.index');
     })->name('manajemen-aset.index');
 
-    // ── Aset (Super Admin, Staff) ──────────────────────────────
-    Route::middleware('role:super_admin,staff')->group(function () {
+    // ── Aset (Super Admin, Staff, Pimpinan) ──────────────────────
+    Route::middleware('role:super_admin,staff,pimpinan')->group(function () {
         Route::resource('aset', AsetController::class);
         Route::resource('kategori-aset', KategoriAsetController::class)->except(['show']);
     });
 
-    // ── Pemeliharaan (Super Admin, Staff, Teknisi) ──────────────
-    Route::middleware('role:super_admin,staff')->group(function () {
+    // ── Pemeliharaan (Super Admin, Staff, Pimpinan) ──────────────
+    Route::middleware('role:super_admin,staff,pimpinan')->group(function () {
         Route::get('aset/{aset}/pemeliharaan', [PemeliharaanController::class, 'create'])->name('pemeliharaan.create');
         Route::post('aset/{aset}/pemeliharaan', [PemeliharaanController::class, 'store'])->name('pemeliharaan.store');
         Route::get('pemeliharaan', [PemeliharaanController::class, 'index'])->name('pemeliharaan.index');
@@ -38,8 +38,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('peminjaman', [PeminjamanController::class, 'index'])->name('peminjaman.index');
     Route::get('peminjaman/{peminjaman}', [PeminjamanController::class, 'show'])->name('peminjaman.show');
     
-    // Approval & Return (Super Admin, Staff)
-    Route::middleware('role:super_admin,staff')->group(function () {
+    // Approval & Return (Super Admin, Staff, Pimpinan)
+    Route::middleware('role:super_admin,staff,pimpinan')->group(function () {
         Route::put('peminjaman/{peminjaman}/approve', [PeminjamanController::class, 'approve'])->name('peminjaman.approve');
         Route::put('peminjaman/{peminjaman}/reject', [PeminjamanController::class, 'reject'])->name('peminjaman.reject');
         Route::put('peminjaman/{peminjaman}/return', [PeminjamanController::class, 'return'])->name('peminjaman.return');

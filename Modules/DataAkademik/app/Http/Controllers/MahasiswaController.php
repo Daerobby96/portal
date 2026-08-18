@@ -1,14 +1,15 @@
 <?php
 
 namespace Modules\DataAkademik\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
 use Modules\DataMaster\Models\ProgramStudi;
 use Modules\DataMaster\Models\Periode;
 use App\Imports\MahasiswaImport;
 use App\Exports\TemplateExport;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 
@@ -41,41 +42,71 @@ class MahasiswaController extends Controller
             $query->where('jenis_kelamin', $request->jenis_kelamin);
         }
 
-        $mahasiswas = $query->paginate(20)->withQueryString();
+        $mahasiswas = $query->paginate(15)->through(fn($m) => [
+            'id'                => $m->id,
+            'nim'               => $m->nim,
+            'nama'              => $m->nama,
+            'jenis_kelamin'     => $m->jenis_kelamin,
+            'no_hp'             => $m->no_hp,
+            'email'             => $m->email,
+            'angkatan'          => $m->angkatan,
+            'semester_berjalan' => $m->semester_berjalan,
+            'jalur_masuk'       => $m->jalur_masuk,
+            'ipk'               => $m->ipk,
+            'status'            => $m->status,
+            'prodi_id'          => $m->prodi_id,
+            'prodi_nama'        => $m->prodi?->nama,
+            'periode_nama'      => $m->periode?->nama,
+            'tanggal_masuk'     => $m->tanggal_masuk?->format('Y-m-d'),
+            'tanggal_lulus'     => $m->tanggal_lulus?->format('Y-m-d'),
+            'masa_studi_bulan'  => $m->masa_studi_bulan,
+        ])->withQueryString();
 
         // ─── Statistik ─────────────────────────────────────────────
         $stats = [
             'total'              => Mahasiswa::count(),
             'aktif'              => Mahasiswa::aktif()->count(),
             'lulus'              => Mahasiswa::lulus()->count(),
-            'mengundurkan_diri'  => Mahasiswa::where('status', 'mengundurkan_diri')->count(),
-            'do'                 => Mahasiswa::where('status', 'DO')->count(),
-            'avg_ipk'            => Mahasiswa::whereNotNull('ipk')->avg('ipk') ?? 0,
-            'avg_studi'          => Mahasiswa::whereNotNull('masa_studi_bulan')->avg('masa_studi_bulan') ?? 0,
+            'cuti'               => Mahasiswa::where('status', Mahasiswa::STATUS_CUTI)->count(),
+            'do'                 => Mahasiswa::where('status', Mahasiswa::STATUS_DO)->count(),
+            'mengundurkan_diri'  => Mahasiswa::where('status', Mahasiswa::STATUS_MENGUNDURKAN_DIRI)->count(),
+            'avg_ipk'            => round(Mahasiswa::whereNotNull('ipk')->avg('ipk') ?? 0, 2),
         ];
 
         // ─── Options untuk Filter ──────────────────────────────────
-        $prodis = ProgramStudi::aktif()->orderBy('nama')->get();
+        $prodis = ProgramStudi::where('is_aktif', true)->orderBy('nama')->get(['id', 'nama']);
         $angkatans = Mahasiswa::whereNotNull('angkatan')->distinct()->orderBy('angkatan', 'desc')->pluck('angkatan');
         $statusOptions = Mahasiswa::statusOptions();
 
-        return view('dataakademik::mahasiswa.index', compact('mahasiswas', 'stats', 'prodis', 'angkatans', 'statusOptions'));
+        return Inertia::render('DataAkademik/Mahasiswa/Index', [
+            'mahasiswas'    => $mahasiswas,
+            'stats'         => $stats,
+            'prodis'        => $prodis,
+            'angkatans'     => $angkatans,
+            'statusOptions' => $statusOptions,
+            'filters'       => $request->only(['search', 'prodi', 'angkatan', 'status', 'jenis_kelamin']),
+        ]);
     }
 
     public function create()
     {
-        $prodis = ProgramStudi::aktif()->orderBy('nama')->get();
-        $periodes = Periode::orderBy('tahun', 'desc')->get();
+        $prodis = ProgramStudi::where('is_aktif', true)->orderBy('nama')->get(['id', 'nama']);
+        $periodes = Periode::orderBy('tahun', 'desc')->get(['id', 'nama', 'semester', 'tahun']);
         $statusOptions = Mahasiswa::statusOptions();
         $jalurOptions = Mahasiswa::JALUR_MASUK;
         
-        return view('dataakademik::mahasiswa.create', compact('prodis', 'periodes', 'statusOptions', 'jalurOptions'));
+        return Inertia::render('DataAkademik/Mahasiswa/Create', [
+            'prodis'        => $prodis,
+            'periodes'      => $periodes,
+            'statusOptions' => $statusOptions,
+            'jalurOptions'  => $jalurOptions,
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nim'               => 'required|string|max:30|unique:mahasiswas',
+            'nim'               => 'required|string|max:30|unique:mahasiswas,nim',
             'nama'              => 'required|string|max:255',
             'jenis_kelamin'     => 'nullable|in:L,P',
             'no_hp'             => 'nullable|string|max:20',
@@ -91,17 +122,11 @@ class MahasiswaController extends Controller
             'tanggal_lulus'     => 'nullable|date|after_or_equal:tanggal_masuk',
             'masa_studi_bulan'  => 'nullable|integer|min:0',
             'keterangan'        => 'nullable|string',
+            'tempat_lahir'      => 'nullable|string|max:100',
+            'tanggal_lahir'     => 'nullable|date',
+            'nik'               => 'nullable|string|max:30',
+            'alamat'            => 'nullable|string',
         ]);
-
-        // Hitung masa studi jika kosong tapi tgl masuk & lulus ada
-        if (empty($validated['masa_studi_bulan']) && !empty($validated['tanggal_masuk']) && !empty($validated['tanggal_lulus'])) {
-            $validated['masa_studi_bulan'] = Mahasiswa::hitungMasaStudi($validated['tanggal_masuk'], $validated['tanggal_lulus']);
-        }
-        
-        // Hitung semester berjalan jika kosong tapi angkatan ada
-        if (empty($validated['semester_berjalan']) && !empty($validated['angkatan'])) {
-            $validated['semester_berjalan'] = Mahasiswa::hitungSemester($validated['angkatan']);
-        }
 
         Mahasiswa::create($validated);
 
@@ -110,17 +135,54 @@ class MahasiswaController extends Controller
 
     public function show(Mahasiswa $mahasiswa)
     {
-        return view('dataakademik::mahasiswa.show', compact('mahasiswa'));
+        $mahasiswa->load(['prodi', 'periode']);
+        
+        return Inertia::render('DataAkademik/Mahasiswa/Show', [
+            'mahasiswa' => [
+                'id'                => $mahasiswa->id,
+                'nim'               => $mahasiswa->nim,
+                'nama'              => $mahasiswa->nama,
+                'jenis_kelamin'     => $mahasiswa->jenis_kelamin,
+                'no_hp'             => $mahasiswa->no_hp,
+                'email'             => $mahasiswa->email,
+                'angkatan'          => $mahasiswa->angkatan,
+                'semester_berjalan' => $mahasiswa->semester_berjalan,
+                'jalur_masuk'       => $mahasiswa->jalur_masuk,
+                'ipk'               => $mahasiswa->ipk,
+                'status'            => $mahasiswa->status,
+                'prodi_id'          => $mahasiswa->prodi_id,
+                'prodi_nama'        => $mahasiswa->prodi?->nama,
+                'periode_nama'      => $mahasiswa->periode?->nama,
+                'tanggal_masuk'     => $mahasiswa->tanggal_masuk?->format('Y-m-d'),
+                'tanggal_lulus'     => $mahasiswa->tanggal_lulus?->format('Y-m-d'),
+                'masa_studi_bulan'  => $mahasiswa->masa_studi_bulan,
+                'keterangan'        => $mahasiswa->keterangan,
+                'tempat_lahir'      => $mahasiswa->tempat_lahir,
+                'tanggal_lahir'     => $mahasiswa->tanggal_lahir?->format('Y-m-d'),
+                'nik'               => $mahasiswa->nik,
+                'alamat'            => $mahasiswa->alamat,
+                'nama_ayah'         => $mahasiswa->nama_ayah,
+                'nama_ibu'          => $mahasiswa->nama_ibu,
+                'pekerjaan_ayah'    => $mahasiswa->pekerjaan_ayah,
+                'pekerjaan_ibu'     => $mahasiswa->pekerjaan_ibu,
+            ]
+        ]);
     }
 
     public function edit(Mahasiswa $mahasiswa)
     {
-        $prodis = ProgramStudi::aktif()->orderBy('nama')->get();
-        $periodes = Periode::orderBy('tahun', 'desc')->get();
+        $prodis = ProgramStudi::where('is_aktif', true)->orderBy('nama')->get(['id', 'nama']);
+        $periodes = Periode::orderBy('tahun', 'desc')->get(['id', 'nama', 'semester', 'tahun']);
         $statusOptions = Mahasiswa::statusOptions();
         $jalurOptions = Mahasiswa::JALUR_MASUK;
         
-        return view('dataakademik::mahasiswa.edit', compact('mahasiswa', 'prodis', 'periodes', 'statusOptions', 'jalurOptions'));
+        return Inertia::render('DataAkademik/Mahasiswa/Edit', [
+            'mahasiswa'     => $mahasiswa,
+            'prodis'        => $prodis,
+            'periodes'      => $periodes,
+            'statusOptions' => $statusOptions,
+            'jalurOptions'  => $jalurOptions,
+        ]);
     }
 
     public function update(Request $request, Mahasiswa $mahasiswa)
@@ -142,17 +204,11 @@ class MahasiswaController extends Controller
             'tanggal_lulus'     => 'nullable|date|after_or_equal:tanggal_masuk',
             'masa_studi_bulan'  => 'nullable|integer|min:0',
             'keterangan'        => 'nullable|string',
+            'tempat_lahir'      => 'nullable|string|max:100',
+            'tanggal_lahir'     => 'nullable|date',
+            'nik'               => 'nullable|string|max:30',
+            'alamat'            => 'nullable|string',
         ]);
-
-        // Hitung masa studi jika kosong tapi tgl masuk & lulus ada
-        if (empty($validated['masa_studi_bulan']) && !empty($validated['tanggal_masuk']) && !empty($validated['tanggal_lulus'])) {
-            $validated['masa_studi_bulan'] = Mahasiswa::hitungMasaStudi($validated['tanggal_masuk'], $validated['tanggal_lulus']);
-        }
-
-        // Hitung semester berjalan jika kosong tapi angkatan ada
-        if (empty($validated['semester_berjalan']) && !empty($validated['angkatan'])) {
-            $validated['semester_berjalan'] = Mahasiswa::hitungSemester($validated['angkatan']);
-        }
 
         $mahasiswa->update($validated);
 
@@ -168,7 +224,7 @@ class MahasiswaController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:5120',
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
@@ -189,18 +245,11 @@ class MahasiswaController extends Controller
         return Excel::download(new TemplateExport($headings, 'Template Mahasiswa'), 'template-mahasiswa.xlsx');
     }
 
-    /**
-     * Endpoint untuk mengambil statistik IKU Mahasiswa via AJAX (misal untuk dashboard)
-     */
     public function statistikIku()
     {
-        // Contoh perhitungan sederhana IKU terkait Mahasiswa
-        
         $totalLulusan = Mahasiswa::lulus()->count();
-        $lulusTepatWaktu = Mahasiswa::lulus()->where('masa_studi_bulan', '<=', 48)->count(); // Contoh <= 4 tahun (48 bln) utk S1
+        $lulusTepatWaktu = Mahasiswa::lulus()->where('masa_studi_bulan', '<=', 48)->count();
         $persentaseTepatWaktu = $totalLulusan > 0 ? round(($lulusTepatWaktu / $totalLulusan) * 100, 2) : 0;
-
-        $mhsPrestasi = 0; // Butuh data tambahan/tabel terpisah
 
         return response()->json([
             'lulus_tepat_waktu' => [
@@ -209,8 +258,8 @@ class MahasiswaController extends Controller
                 'percentage' => $persentaseTepatWaktu,
                 'label' => 'Lulusan Tepat Waktu (<= 4 Tahun)'
             ],
-            // Tambahkan metrik lain jika diperlukan
         ]);
     }
 }
+
 

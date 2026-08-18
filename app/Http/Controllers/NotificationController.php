@@ -6,28 +6,20 @@ use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    public function index()
+    public function markAsRead(Request $request, $id)
     {
-        $notifications = auth()->user()->notifications()->paginate(15);
-        return view('notifications.index', compact('notifications'));
-    }
-
-    public function markAsRead($id)
-    {
-        $notification = auth()->user()->notifications()->findOrFail($id);
-        $notification->markAsRead();
-        
-        // Coba redirect ke link yang ada di data
-        if (isset($notification->data['link'])) {
-            return redirect($notification->data['link']);
+        $notification = $request->user()->notifications()->where('id', $id)->first();
+        if ($notification) {
+            $notification->markAsRead();
         }
-        
-        return back();
+
+        return back()->with('success', 'Notifikasi ditandai sudah dibaca.');
     }
 
-    public function markAllAsRead()
+    public function markAllAsRead(Request $request)
     {
-        auth()->user()->unreadNotifications->markAsRead();
-        return back()->with('success', 'Semua notifikasi telah ditandai sudah dibaca.');
+        $request->user()->unreadNotifications->markAsRead();
+
+        return back()->with('success', 'Semua notifikasi ditandai sudah dibaca.');
     }
 }

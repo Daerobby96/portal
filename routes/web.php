@@ -55,9 +55,18 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── Notifications ────────────────────────────────────────────────
-    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-    Route::get('/notifications/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+
+    // ── Global Omnibar Search (Ctrl + K) ────────────────────────────
+    Route::get('/api/global-search', [App\Http\Controllers\GlobalSearchController::class, 'search'])->name('global-search');
+
+    // ── Pusat Cetak Dokumen Resmi PDF ───────────────────────────────
+    Route::get('/cetak/notulensi-rapat/{id}', [App\Http\Controllers\PdfExportController::class, 'notulensiRapat'])->name('cetak.notulensi');
+    Route::get('/cetak/berita-acara-ami/{id}', [App\Http\Controllers\PdfExportController::class, 'beritaAcaraAmi'])->name('cetak.berita-acara-ami');
+    Route::get('/cetak/laporan-rtm/{id?}', [App\Http\Controllers\PdfExportController::class, 'laporanRtm'])->name('cetak.laporan-rtm');
+    Route::get('/cetak/laporan-rtl/{id?}', [App\Http\Controllers\PdfExportController::class, 'laporanRtl'])->name('cetak.laporan-rtl');
+    Route::get('/cetak/rekap-akreditasi', [App\Http\Controllers\PdfExportController::class, 'rekapAkreditasi'])->name('cetak.rekap-akreditasi');
 
     // ── Audit Mutu Internal (Dipindah ke Modul Spmi) ────────────────────────────────────────
 

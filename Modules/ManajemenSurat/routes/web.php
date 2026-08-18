@@ -31,10 +31,7 @@ Route::middleware(['auth'])->group(function () {
     // ═══════════════════════════════════════════════════════════
     Route::middleware('role:super_admin,pimpinan')->prefix('unit-pengelola')->name('unit-pengelola.')->group(function () {
         Route::get('/', [\Modules\ManajemenSurat\Http\Controllers\UnitPengelolaSuratController::class, 'index'])->name('index');
-        Route::get('/create', [\Modules\ManajemenSurat\Http\Controllers\UnitPengelolaSuratController::class, 'create'])->name('create');
         Route::post('/', [\Modules\ManajemenSurat\Http\Controllers\UnitPengelolaSuratController::class, 'store'])->name('store');
-        Route::get('/{unitPengelola}', [\Modules\ManajemenSurat\Http\Controllers\UnitPengelolaSuratController::class, 'show'])->name('show');
-        Route::get('/{unitPengelola}/edit', [\Modules\ManajemenSurat\Http\Controllers\UnitPengelolaSuratController::class, 'edit'])->name('edit');
         Route::put('/{unitPengelola}', [\Modules\ManajemenSurat\Http\Controllers\UnitPengelolaSuratController::class, 'update'])->name('update');
         Route::delete('/{unitPengelola}', [\Modules\ManajemenSurat\Http\Controllers\UnitPengelolaSuratController::class, 'destroy'])->name('destroy');
     });

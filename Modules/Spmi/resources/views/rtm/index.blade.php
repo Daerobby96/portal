@@ -5,10 +5,16 @@
 @section('page-subtitle', 'Monitoring hasil audit dan keputusan manajemen')
 
 @section('page-actions')
-    <a href="{{ route('rtm.create') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/20 active:translate-y-0">
-        <i class="bi bi-plus-lg"></i>
-        <span>Buat RTM Baru</span>
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('cetak.laporan-rtm') }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-md hover:shadow-indigo-600/20 active:translate-y-0 text-decoration-none">
+            <i class="bi bi-file-earmark-pdf-fill"></i>
+            <span>Cetak Laporan RTM (A4)</span>
+        </a>
+        <a href="{{ route('rtm.create') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/20 active:translate-y-0 text-decoration-none">
+            <i class="bi bi-plus-lg"></i>
+            <span>Buat RTM Baru</span>
+        </a>
+    </div>
 @endsection
 
 @section('breadcrumb')

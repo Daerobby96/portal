@@ -92,7 +92,7 @@ const getActionBadge = (actionName) => {
                         Log Aktivitas & Riwayat Sistem
                     </h1>
                     <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
-                        Rekam jejak setiap aksi pengguna, pembuatan dokumen, perubahan data, approval, dan aktivitas keamanan di ERP-POLKA.
+                        Rekam jejak setiap aksi pengguna, pembuatan dokumen, perubahan data, approval, dan aktivitas keamanan di PINTAR.
                     </p>
                 </div>
             </div>

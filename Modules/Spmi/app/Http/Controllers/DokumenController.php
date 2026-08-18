@@ -40,38 +40,54 @@ class DokumenController extends Controller
             });
         }
 
-        $perPage = $request->integer('per_page', 10);
-        if (!in_array($perPage, [10, 20, 25, 50, 100])) {
-            $perPage = 10;
+        $perPageParam = $request->get('per_page', '15');
+        if ($perPageParam === 'all' || $perPageParam === 'semua' || $perPageParam === '-1') {
+            $perPage = 1000;
+        } else {
+            $perPage = (int)$perPageParam;
+            if (!in_array($perPage, [10, 15, 20, 25, 50, 100, 1000])) {
+                $perPage = 15;
+            }
         }
         $dokumens   = $query->paginate($perPage)->withQueryString();
-        $kategoris  = KategoriDokumen::orderBy('nama')->get();
-        $standars   = Standar::where('is_aktif', true)->orderBy('nama')->get();
+        $kategoris  = KategoriDokumen::orderBy('id')->get();
+        $standars   = Standar::where('is_aktif', true)->orderBy('kode')->get();
 
         $stats = [
             'total'      => Dokumen::count(),
             'approved'   => Dokumen::where('status', 'approved')->count(),
-            'draft'      => Dokumen::where('status', 'draft')->count(),
+            'formulir'   => Dokumen::whereHas('kategori', fn($q) => $q->where('kode', 'FRM'))->count(),
             'review'     => Dokumen::where('status', 'review')->count(),
-            'kadaluarsa' => Dokumen::where('tanggal_kadaluarsa', '<=', now())
-                                   ->where('status', 'approved')->count(),
+            'draft'      => Dokumen::where('status', 'draft')->count(),
         ];
 
         return \Inertia\Inertia::render('Spmi/Dokumen/Index', [
-            'dokumens' => $dokumens,
-            'kategoris' => $kategoris,
-            'standars' => $standars,
-            'stats' => $stats,
+            'dokumens'   => $dokumens,
+            'kategoris'  => $kategoris,
+            'standars'   => $standars,
+            'stats'      => $stats,
+            'filters'    => [
+                'search'      => $request->search ?? '',
+                'kategori_id' => $request->kategori_id ?? '',
+                'status'      => $request->status ?? '',
+                'standar_id'  => $request->standar_id ?? '',
+                'per_page'    => (string)$perPageParam,
+            ],
         ]);
     }
 
     public function create()
     {
-        $kategoris = KategoriDokumen::orderBy('nama')->get();
-        $standars  = Standar::where('is_aktif', true)->orderBy('nama')->get();
+        $kategoris  = KategoriDokumen::orderBy('id')->get();
+        $standars   = Standar::where('is_aktif', true)->orderBy('kode')->get();
+        $unitKerjas = \Modules\DataMaster\Models\UnitKerja::where('is_aktif', true)->orderBy('nama')->get(['id', 'kode', 'nama', 'tipe']);
+        $prodis     = \Modules\DataMaster\Models\ProgramStudi::orderBy('nama')->get(['id', 'kode', 'nama']);
+
         return \Inertia\Inertia::render('Spmi/Dokumen/Create', [
-            'kategoris' => $kategoris,
-            'standars'  => $standars,
+            'kategoris'  => $kategoris,
+            'standars'   => $standars,
+            'unitKerjas' => $unitKerjas,
+            'prodis'     => $prodis,
         ]);
     }
 
@@ -171,12 +187,17 @@ class DokumenController extends Controller
     public function edit(Dokumen $dokumen)
     {
         $dokumen->load('standars');
-        $kategoris = KategoriDokumen::orderBy('nama')->get();
-        $standars  = Standar::where('is_aktif', true)->orderBy('nama')->get();
+        $kategoris  = KategoriDokumen::orderBy('id')->get();
+        $standars   = Standar::where('is_aktif', true)->orderBy('kode')->get();
+        $unitKerjas = \Modules\DataMaster\Models\UnitKerja::where('is_aktif', true)->orderBy('nama')->get(['id', 'kode', 'nama', 'tipe']);
+        $prodis     = \Modules\DataMaster\Models\ProgramStudi::orderBy('nama')->get(['id', 'kode', 'nama']);
+
         return \Inertia\Inertia::render('Spmi/Dokumen/Edit', [
-            'dokumen'   => $dokumen,
-            'kategoris' => $kategoris,
-            'standars'  => $standars,
+            'dokumen'    => $dokumen,
+            'kategoris'  => $kategoris,
+            'standars'   => $standars,
+            'unitKerjas' => $unitKerjas,
+            'prodis'     => $prodis,
         ]);
     }
 

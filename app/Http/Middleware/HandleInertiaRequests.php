@@ -52,6 +52,16 @@ class HandleInertiaRequests extends Middleware
                 'info' => fn () => $request->session()->get('info'),
             ],
             'active_periode' => fn () => \Modules\DataMaster\Models\Periode::where('is_aktif', true)->select('id', 'nama', 'tahun', 'semester')->first(),
+            'notifications' => fn () => $request->user() ? [
+                'unread_count' => $request->user()->unreadNotifications()->count(),
+                'list' => $request->user()->notifications()->latest()->limit(10)->get()->map(fn($n) => [
+                    'id' => $n->id,
+                    'type' => class_basename($n->type),
+                    'data' => $n->data,
+                    'read_at' => $n->read_at ? $n->read_at->toISOString() : null,
+                    'created_at' => $n->created_at ? $n->created_at->diffForHumans() : '',
+                ]),
+            ] : null,
         ]);
     }
 }

@@ -10,7 +10,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('portal');
         }
         return Inertia::render('Auth/Login', [
             'appSettings' => [
@@ -39,7 +39,7 @@ class AuthController extends Controller
             // Log activity
             Auth::user()->logActivity('login', 'User logged in to the system');
 
-            return redirect()->intended(route('dashboard'))
+            return redirect()->intended(route('portal'))
                 ->with('success', 'Selamat datang, ' . Auth::user()->name . '!');
         }
 

@@ -12,28 +12,40 @@ class IndikatorKinerjaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = IndikatorKinerja::with('standar');
+        $query = IndikatorKinerja::with('standar')
+            ->leftJoin('standars', 'indikator_kinerjas.standar_id', '=', 'standars.id')
+            ->select('indikator_kinerjas.*');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('nama', 'like', '%' . $request->search . '%')
-                  ->orWhere('kode', 'like', '%' . $request->search . '%');
+                $q->where('indikator_kinerjas.nama', 'like', '%' . $request->search . '%')
+                  ->orWhere('indikator_kinerjas.kode', 'like', '%' . $request->search . '%');
             });
         }
 
         if ($request->filled('standar_id')) {
-            $query->where('standar_id', $request->standar_id);
+            $query->where('indikator_kinerjas.standar_id', $request->standar_id);
         }
 
         if ($request->filled('tipe')) {
-            $query->where('tipe', $request->tipe);
+            $query->where('indikator_kinerjas.tipe', $request->tipe);
         }
 
-        $perPage = $request->integer('per_page', 15);
-        if (!in_array($perPage, [10, 20, 25, 50, 100])) {
-            $perPage = 15;
+        $perPageParam = $request->get('per_page', '15');
+        if ($perPageParam === 'all' || $perPageParam === 'semua' || $perPageParam === '-1') {
+            $perPage = 1000;
+        } else {
+            $perPage = (int)$perPageParam;
+            if (!in_array($perPage, [10, 15, 20, 25, 50, 100, 1000])) {
+                $perPage = 15;
+            }
         }
-        $indikators = $query->orderBy('tipe')->orderBy('kode')->paginate($perPage)->withQueryString();
+
+        $indikators = $query->orderBy('standars.kode')
+            ->orderByRaw("CASE WHEN indikator_kinerjas.tipe = 'IKU' THEN 1 WHEN indikator_kinerjas.tipe = 'IKT' THEN 2 ELSE 3 END")
+            ->orderBy('indikator_kinerjas.kode')
+            ->paginate($perPage)
+            ->withQueryString();
         $standars = Standar::where('is_aktif', true)->orderBy('kode')->get();
 
         // Summary per tipe
@@ -47,6 +59,12 @@ class IndikatorKinerjaController extends Controller
             'indikators' => $indikators,
             'standars'   => $standars,
             'summary'    => $summary,
+            'filters'    => [
+                'search'     => $request->search ?? '',
+                'standar_id' => $request->standar_id ?? '',
+                'tipe'       => $request->tipe ?? '',
+                'per_page'   => (string)$perPageParam,
+            ],
         ]);
     }
 
@@ -54,9 +72,14 @@ class IndikatorKinerjaController extends Controller
     {
         $standars    = Standar::where('is_aktif', true)->orderBy('kode')->get();
         $tipeOptions = IndikatorKinerja::tipeOptions();
+        $unitKerjas  = \Modules\DataMaster\Models\UnitKerja::where('is_aktif', true)->orderBy('nama')->get(['id', 'kode', 'nama', 'tipe']);
+        $prodis      = \Modules\DataMaster\Models\ProgramStudi::orderBy('nama')->get(['id', 'kode', 'nama']);
+
         return \Inertia\Inertia::render('Spmi/IndikatorKinerja/Create', [
             'standars'    => $standars,
             'tipeOptions' => $tipeOptions,
+            'unitKerjas'  => $unitKerjas,
+            'prodis'      => $prodis,
         ]);
     }
 
@@ -102,12 +125,19 @@ class IndikatorKinerjaController extends Controller
 
     public function edit(IndikatorKinerja $indikator_kinerja)
     {
+        $indikator_kinerja->load('standar');
         $standars    = Standar::where('is_aktif', true)->orderBy('kode')->get();
         $tipeOptions = IndikatorKinerja::tipeOptions();
+        $unitKerjas  = \Modules\DataMaster\Models\UnitKerja::where('is_aktif', true)->orderBy('nama')->get(['id', 'kode', 'nama', 'tipe']);
+        $prodis      = \Modules\DataMaster\Models\ProgramStudi::orderBy('nama')->get(['id', 'kode', 'nama']);
+
         return \Inertia\Inertia::render('Spmi/IndikatorKinerja/Edit', [
+            'indikator'        => $indikator_kinerja,
             'indikatorKinerja' => $indikator_kinerja,
             'standars'         => $standars,
             'tipeOptions'      => $tipeOptions,
+            'unitKerjas'       => $unitKerjas,
+            'prodis'           => $prodis,
         ]);
     }
 

@@ -126,20 +126,30 @@ class AuditController extends Controller
 
     public function show(Audit $audit)
     {
-        $audit->load(['periode', 'ketuaAuditor', 'auditors', 'temuans.tindakLanjuts', 'checklists.indikator.standar']);
+        $audit->load(['periode', 'ketuaAuditor', 'auditors', 'temuans.tindakLanjuts', 'temuans.checklist.indikator.standar']);
+        $audit->setRelation('checklists', $audit->checklists()
+            ->leftJoin('indikator_kinerjas', 'audit_checklists.indikator_id', '=', 'indikator_kinerjas.id')
+            ->leftJoin('standars', 'indikator_kinerjas.standar_id', '=', 'standars.id')
+            ->select('audit_checklists.*')
+            ->with('indikator.standar')
+            ->orderBy('standars.kode')
+            ->orderByRaw("CASE WHEN indikator_kinerjas.tipe = 'IKU' THEN 1 WHEN indikator_kinerjas.tipe = 'IKT' THEN 2 ELSE 3 END")
+            ->orderBy('indikator_kinerjas.kode')
+            ->get()
+        );
 
         // Ambil indikator yang relevan dengan unit kerja ini
-        $indikators = \Modules\Spmi\Models\IndikatorKinerja::where('unit_kerja', $audit->unit_yang_diaudit)
-                                                ->where('is_aktif', true)
-                                                ->with('standar')
-                                                ->orderBy('kode')
-                                                ->get();
+        $indikatorQuery = \Modules\Spmi\Models\IndikatorKinerja::leftJoin('standars', 'indikator_kinerjas.standar_id', '=', 'standars.id')
+            ->select('indikator_kinerjas.*')
+            ->where('indikator_kinerjas.is_aktif', true)
+            ->with('standar')
+            ->orderBy('standars.kode')
+            ->orderByRaw("CASE WHEN indikator_kinerjas.tipe = 'IKU' THEN 1 WHEN indikator_kinerjas.tipe = 'IKT' THEN 2 ELSE 3 END")
+            ->orderBy('indikator_kinerjas.kode');
 
+        $indikators = (clone $indikatorQuery)->where('indikator_kinerjas.unit_kerja', $audit->unit_yang_diaudit)->get();
         if ($indikators->isEmpty()) {
-            $indikators = \Modules\Spmi\Models\IndikatorKinerja::where('is_aktif', true)
-                                                    ->with('standar')
-                                                    ->orderBy('kode')
-                                                    ->get();
+            $indikators = $indikatorQuery->get();
         }
 
         $statsTemuan = [
@@ -171,12 +181,17 @@ class AuditController extends Controller
     public function generateChecklist(Audit $audit)
     {
         // Ambil indikator yang relevan dengan unit kerja ini
-        $indikators = \Modules\Spmi\Models\IndikatorKinerja::where('unit_kerja', $audit->unit_yang_diaudit)
-                                                 ->where('is_aktif', true)
-                                                 ->get();
+        $indikatorQuery = \Modules\Spmi\Models\IndikatorKinerja::leftJoin('standars', 'indikator_kinerjas.standar_id', '=', 'standars.id')
+            ->select('indikator_kinerjas.*')
+            ->where('indikator_kinerjas.is_aktif', true)
+            ->with('standar')
+            ->orderBy('standars.kode')
+            ->orderByRaw("CASE WHEN indikator_kinerjas.tipe = 'IKU' THEN 1 WHEN indikator_kinerjas.tipe = 'IKT' THEN 2 ELSE 3 END")
+            ->orderBy('indikator_kinerjas.kode');
 
+        $indikators = (clone $indikatorQuery)->where('indikator_kinerjas.unit_kerja', $audit->unit_yang_diaudit)->get();
         if ($indikators->isEmpty()) {
-            $indikators = \Modules\Spmi\Models\IndikatorKinerja::where('is_aktif', true)->get();
+            $indikators = $indikatorQuery->get();
         }
 
         $count = 0;
@@ -226,34 +241,27 @@ class AuditController extends Controller
 
                 // OTOMATISASI TEMUAN: Jika statusnya Tidak Sesuai, buatkan Temuan formal langsung
                 if ($statusDefault === 'tidak_sesuai') {
-                    $uraianDefault = '[Auto-Generated] ' . ($catatan ?: 'Indikator tidak mencapai target pada periode monitoring.');
+                    $standarNama = $ind->standar ? $ind->standar->nama : 'Standar Mutu Terkait';
+                    $realisasiNilai = $monitoring ? $monitoring->nilai_capaian : '0';
+                    $uraianDefault = "Capaian indikator [{$ind->kode}] \"{$ind->nama}\" pada Standar {$standarNama} belum memenuhi target mutu (Realisasi: {$realisasiNilai} {$ind->unit_pengukuran} dari Target: {$ind->target_nilai} {$ind->unit_pengukuran}). " . ($catatan ? "Catatan: {$catatan}" : "Diperlukan tindakan koreksi (PTK) terukur.");
                     
-                    // SMART AI GENERATOR: Menghasilkan uraian temuan kualitatif yang spesifik menggunakan LLM Llama-3.3-70b via Groq
                     try {
-                        $aiService = app(\App\Services\AiService::class);
-                        $standarNama = $ind->standar ? $ind->standar->pernyataan : 'Standar Terkait';
-                        $realisasiNilai = $monitoring ? $monitoring->nilai_capaian : '0';
-                        
-                        $prompt = "Sebagai seorang Auditor Ahli Sistem Penjaminan Mutu Internal (SPMI) Perguruan Tinggi, rumuskan sebuah kalimat **Uraian Temuan** yang sangat spesifik, formal, kritis, dan profesional berdasarkan informasi ketidaksesuaian berikut:\n\n" .
-                                  "- **Nama Indikator**: \"{$ind->nama}\"\n" .
-                                  "- **Standar**: \"{$standarNama}\"\n" .
-                                  "- **Target Nilai**: \"{$ind->target_nilai} {$ind->unit_pengukuran}\"\n" .
-                                  "- **Realisasi Nilai**: \"{$realisasiNilai} {$ind->unit_pengukuran}\"\n" .
-                                  "- **Catatan Evaluasi Lapangan**: \"" . ($catatan ?: 'Tidak ada catatan tambahan') . "\"\n" .
-                                  "- **Unit Kerja**: \"{$audit->unit_yang_diaudit}\"\n\n" .
-                                  "ATURAN FORMULASI (WAJIB):\n" .
-                                  "1. Gunakan Bahasa Indonesia baku, formal, akademis, dan analitis.\n" .
-                                  "2. Tuliskan dalam **SATU paragraf pendek** (maksimal 2 kalimat) yang langsung menggambarkan inti ketidaksesuaian beserta angkanya.\n" .
-                                  "3. JANGAN menyertakan pembuka seperti \"Uraian Temuan:\" atau tanda petik di luar teks.\n" .
-                                  "4. Sebutkan nama indikator dan unit kerjanya secara alami.\n" .
-                                  "5. Jika tidak ada catatan evaluasi, formulasikan berdasarkan selisih antara target dan realisasi secara logis.\n" .
-                                  "JANGAN berikan salam pembuka/penutup atau teks pengantar apa pun. Berikan langsung rumusan temuannya.";
-                        
-                        $aiResult = $aiService->generate($prompt);
-                        if ($aiResult['status'] === 'success' && !empty($aiResult['data'])) {
-                            $uraianDefault = '[Auto-Generated AI] ' . $aiResult['data'];
+                        $aiService = app(\Modules\Spmi\Services\AiEvaluasiService::class);
+                        $aiEval = $aiService->generateEvaluation([
+                            'indikator_kode'   => $ind->kode,
+                            'indikator_nama'   => $ind->nama,
+                            'target_nilai'     => $ind->target_nilai,
+                            'nilai_capaian'    => $realisasiNilai,
+                            'unit_pengukuran'  => $ind->unit_pengukuran,
+                            'unit_kerja'       => $audit->unit_yang_diaudit,
+                            'standar_kode'     => $ind->standar?->kode,
+                            'standar_nama'     => $standarNama,
+                            'bidang'           => $ind->standar?->bidang ?? 'pendidikan',
+                        ]);
+                        if (!empty($aiEval['analisa'])) {
+                            $uraianDefault = strtok($aiEval['analisa'], "\n");
                         }
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         \Illuminate\Support\Facades\Log::warning('Gagal generate AI temuan otomatis: ' . $e->getMessage());
                     }
 

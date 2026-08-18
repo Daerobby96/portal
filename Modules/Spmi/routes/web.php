@@ -19,6 +19,15 @@ use Modules\Spmi\Http\Controllers\LaporanController;
 use Modules\Spmi\Http\Controllers\AiController;
 use Modules\Spmi\Http\Controllers\IntegrationDashboardController;
 use Modules\Spmi\Http\Controllers\SiklusSpmiController;
+use Modules\Spmi\Http\Controllers\PeningkatanStandarController;
+use Modules\Spmi\Http\Controllers\BenchmarkingController;
+
+// ── Pengisian Kuesioner (Public / All Users - Accessible without login for public surveys) ──
+Route::get('/survei/aktif', [UserKuesionerController::class, 'activeSurvey'])->name('user-kuesioner.active');
+Route::get('/survei', [UserKuesionerController::class, 'index'])->name('user-kuesioner.index');
+Route::get('/survei/{kuesioner}', [UserKuesionerController::class, 'fill'])->name('user-kuesioner.fill');
+Route::get('/survei/{kuesioner}/isi', [UserKuesionerController::class, 'fill']);
+Route::post('/survei/{kuesioner}', [UserKuesionerController::class, 'submit'])->name('user-kuesioner.submit');
 
 Route::middleware(['auth'])->group(function () {
     // ── Siklus Mutu SPMI ─────────────────────────────────────────
@@ -26,12 +35,6 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('siklus-spmi', SiklusSpmiController::class);
         Route::post('siklus-spmi/{siklusSpmi}/close', [SiklusSpmiController::class, 'close'])->name('siklus-spmi.close');
     });
-
-    // ── Pengisian Kuesioner (Public / All Users) ──────────────────
-    Route::get('/survei/aktif', [UserKuesionerController::class, 'activeSurvey'])->name('user-kuesioner.active');
-    Route::get('/survei', [UserKuesionerController::class, 'index'])->name('user-kuesioner.index');
-    Route::get('/survei/{kuesioner}', [UserKuesionerController::class, 'fill'])->name('user-kuesioner.fill');
-    Route::post('/survei/{kuesioner}', [UserKuesionerController::class, 'submit'])->name('user-kuesioner.submit');
 
     // ── Audit Mutu Internal ────────────────────────────────────────
 
@@ -85,6 +88,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('monitoring', MonitoringController::class);
     });
     Route::middleware('role:super_admin,auditor,pimpinan')->group(function () {
+        Route::post('evaluasi/generate-ai', [EvaluasiController::class, 'generateAi'])->name('evaluasi.generate-ai');
         Route::post('evaluasi/inline', [EvaluasiController::class, 'updateInline'])->name('evaluasi.update-inline');
         Route::resource('evaluasi', EvaluasiController::class);
     });
@@ -125,11 +129,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('kuesioner/{kuesioner}/add-question', [KuesionerController::class, 'addQuestion'])->name('kuesioner.add-question');
         Route::delete('kuesioner-pertanyaan/{pertanyaan}', [KuesionerController::class, 'deleteQuestion'])->name('kuesioner.delete-question');
         
-        // ── Kinerja Dosen ──────────────────────────────────────────
+        // ── Kinerja Dosen (EDOM) ──────────────────────────────────
         Route::get('kinerja-dosen', [DosenKinerjaController::class, 'index'])->name('kinerja-dosen.index');
         Route::post('kinerja-dosen/import-edom', [DosenKinerjaController::class, 'importEdom'])->name('kinerja-dosen.import-edom');
         Route::get('kinerja-dosen/{kinerja}', [DosenKinerjaController::class, 'show'])->name('kinerja-dosen.show');
         Route::get('kinerja-dosen/{kinerja}/export-pdf', [DosenKinerjaController::class, 'exportIndividualPdf'])->name('kinerja-dosen.export-pdf');
+
+        // ── Peningkatan Standar (Kaizen) & Benchmarking (Pilar 5 PPEPP) ──
+        Route::resource('peningkatan-standar', PeningkatanStandarController::class);
+        Route::resource('benchmarking', BenchmarkingController::class);
     });
 
     // ── Laporan ────────────────────────────────────────────────

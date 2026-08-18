@@ -7,6 +7,7 @@ use Modules\Kerjasama\Models\Kerjasama;
 use Modules\DataMaster\Models\ProgramStudi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class KerjasamaController extends Controller
 {
@@ -17,38 +18,107 @@ class KerjasamaController extends Controller
         if ($request->filled('search')) {
             $q = $request->search;
             $query->where(function ($sq) use ($q) {
-                $sq->where('nama_mitra', 'ilike', "%{$q}%")
-                   ->orWhere('judul_kerjasama', 'ilike', "%{$q}%");
+                $sq->where('nama_mitra', 'like', "%{$q}%")
+                   ->orWhere('judul_kerjasama', 'like', "%{$q}%");
             });
         }
         if ($request->filled('tingkat')) {
             $query->where('tingkat', $request->tingkat);
         }
+        if ($request->filled('jenis_dokumen')) {
+            $query->where('jenis_dokumen', $request->jenis_dokumen);
+        }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        $kerjasamas = $query->paginate(15)->withQueryString();
+        $kerjasamas = $query->paginate(15)->through(fn($k) => [
+            'id'              => $k->id,
+            'nama_mitra'      => $k->nama_mitra,
+            'jenis_mitra'     => $k->jenis_mitra,
+            'tingkat'         => $k->tingkat,
+            'judul_kerjasama' => $k->judul_kerjasama,
+            'jenis_dokumen'   => $k->jenis_dokumen,
+            'tanggal_mulai'   => $k->tanggal_mulai?->format('d M Y'),
+            'tanggal_selesai' => $k->tanggal_selesai ? $k->tanggal_selesai->format('d M Y') : 'Seterusnya',
+            'dokumen_mou'     => $k->dokumen_mou ? asset('storage/' . $k->dokumen_mou) : null,
+            'prodi_id'        => $k->prodi_id,
+            'prodi_nama'      => $k->prodi?->nama,
+            'status'          => $k->status,
+            'keterangan'      => $k->keterangan,
+            'is_expiring'     => $k->isExpiring(),
+        ]);
 
         $stats = [
             'total'         => Kerjasama::count(),
             'aktif'         => Kerjasama::where('status', 'Aktif')->count(),
             'internasional' => Kerjasama::where('tingkat', 'Internasional')->count(),
+            'nasional'      => Kerjasama::where('tingkat', 'Nasional')->count(),
         ];
 
-        return view('kerjasama::kerjasama.index', compact('kerjasamas', 'stats'));
+        return Inertia::render('Kerjasama/Index', [
+            'kerjasamas'   => $kerjasamas,
+            'stats'        => $stats,
+            'filters'      => $request->only(['search', 'tingkat', 'jenis_dokumen', 'status']),
+            'jenisMitra'   => Kerjasama::JENIS_MITRA,
+            'tingkatList'  => Kerjasama::TINGKAT,
+            'jenisDokumen' => Kerjasama::JENIS_DOKUMEN,
+            'statusList'   => Kerjasama::STATUS,
+        ]);
     }
 
     public function show(Kerjasama $kerjasama)
     {
         $kerjasama->load('prodi', 'evaluasiMitras.evaluator');
-        return view('kerjasama::kerjasama.show', compact('kerjasama'));
+
+        $evaluasis = $kerjasama->evaluasiMitras->sortByDesc('tanggal_evaluasi')->values()->map(fn($e) => [
+            'id'               => $e->id,
+            'tanggal_evaluasi' => $e->tanggal_evaluasi?->format('d M Y'),
+            'nilai'            => $e->nilai,
+            'catatan'          => $e->catatan,
+            'evaluator_name'   => $e->evaluator?->name ?? 'Evaluator',
+            'created_at'       => $e->created_at?->translatedFormat('d M Y H:i'),
+        ]);
+
+        $avgNilai = $kerjasama->evaluasiMitras->count() > 0
+            ? round($kerjasama->evaluasiMitras->avg('nilai'), 1)
+            : 0;
+
+        return Inertia::render('Kerjasama/Show', [
+            'kerjasama' => [
+                'id'              => $kerjasama->id,
+                'nama_mitra'      => $kerjasama->nama_mitra,
+                'jenis_mitra'     => $kerjasama->jenis_mitra,
+                'tingkat'         => $kerjasama->tingkat,
+                'judul_kerjasama' => $kerjasama->judul_kerjasama,
+                'jenis_dokumen'   => $kerjasama->jenis_dokumen,
+                'tanggal_mulai'   => $kerjasama->tanggal_mulai?->format('d M Y'),
+                'tanggal_selesai' => $kerjasama->tanggal_selesai ? $kerjasama->tanggal_selesai->format('d M Y') : 'Seterusnya',
+                'dokumen_mou'     => $kerjasama->dokumen_mou ? asset('storage/' . $kerjasama->dokumen_mou) : null,
+                'prodi_id'        => $kerjasama->prodi_id,
+                'prodi_nama'      => $kerjasama->prodi?->nama ?? 'Institusi / Universitas',
+                'status'          => $kerjasama->status,
+                'keterangan'      => $kerjasama->keterangan,
+                'is_expiring'     => $kerjasama->isExpiring(),
+                'created_at'      => $kerjasama->created_at?->translatedFormat('d M Y H:i'),
+            ],
+            'evaluasis' => $evaluasis,
+            'avgNilai'  => $avgNilai,
+        ]);
     }
 
     public function create()
     {
-        $prodis = ProgramStudi::aktif()->orderBy('nama')->get();
-        return view('kerjasama::kerjasama.create', compact('prodis'));
+        $prodis = ProgramStudi::aktif()->orderBy('nama')->get()
+            ->map(fn($p) => ['id' => $p->id, 'nama' => $p->nama]);
+
+        return Inertia::render('Kerjasama/Create', [
+            'prodis'       => $prodis,
+            'jenisMitra'   => Kerjasama::JENIS_MITRA,
+            'tingkatList'  => Kerjasama::TINGKAT,
+            'jenisDokumen' => Kerjasama::JENIS_DOKUMEN,
+            'statusList'   => Kerjasama::STATUS,
+        ]);
     }
 
     public function store(Request $request)
@@ -71,15 +141,37 @@ class KerjasamaController extends Controller
             $validated['dokumen_mou'] = $request->file('dokumen_mou')->store('kerjasama_mou', 'public');
         }
 
-        Kerjasama::create($validated);
+        $kerjasama = Kerjasama::create($validated);
 
         return redirect()->route('kerjasama.index')->with('success', 'Data Kerjasama berhasil ditambahkan.');
     }
 
     public function edit(Kerjasama $kerjasama)
     {
-        $prodis = ProgramStudi::aktif()->orderBy('nama')->get();
-        return view('kerjasama::kerjasama.edit', compact('kerjasama', 'prodis'));
+        $prodis = ProgramStudi::aktif()->orderBy('nama')->get()
+            ->map(fn($p) => ['id' => $p->id, 'nama' => $p->nama]);
+
+        return Inertia::render('Kerjasama/Edit', [
+            'kerjasama' => [
+                'id'              => $kerjasama->id,
+                'nama_mitra'      => $kerjasama->nama_mitra,
+                'jenis_mitra'     => $kerjasama->jenis_mitra,
+                'tingkat'         => $kerjasama->tingkat,
+                'judul_kerjasama' => $kerjasama->judul_kerjasama,
+                'jenis_dokumen'   => $kerjasama->jenis_dokumen,
+                'tanggal_mulai'   => $kerjasama->tanggal_mulai?->format('Y-m-d'),
+                'tanggal_selesai' => $kerjasama->tanggal_selesai?->format('Y-m-d'),
+                'dokumen_mou'     => $kerjasama->dokumen_mou ? asset('storage/' . $kerjasama->dokumen_mou) : null,
+                'prodi_id'        => $kerjasama->prodi_id,
+                'status'          => $kerjasama->status,
+                'keterangan'      => $kerjasama->keterangan,
+            ],
+            'prodis'       => $prodis,
+            'jenisMitra'   => Kerjasama::JENIS_MITRA,
+            'tingkatList'  => Kerjasama::TINGKAT,
+            'jenisDokumen' => Kerjasama::JENIS_DOKUMEN,
+            'statusList'   => Kerjasama::STATUS,
+        ]);
     }
 
     public function update(Request $request, Kerjasama $kerjasama)

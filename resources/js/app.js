@@ -14,7 +14,7 @@ window.openModal = (modalId) => {
     window.dispatchEvent(new CustomEvent(`open-modal-${modalId}`));
 };
 
-const appName = import.meta.env.VITE_APP_NAME || 'ERP-POLKA';
+const appName = import.meta.env.VITE_APP_NAME || 'PINTAR';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

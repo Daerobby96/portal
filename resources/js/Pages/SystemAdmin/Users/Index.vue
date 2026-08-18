@@ -94,7 +94,7 @@ const getRoleBadge = (roleName) => {
                         Manajemen Pengguna & Akun
                     </h1>
                     <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
-                        Kelola akun pengguna, penugasan role hak akses Spatie, data NIP/Unit Kerja, serta aktivasi status akun di ERP-POLKA.
+                        Kelola akun pengguna, penugasan role hak akses Spatie, data NIP/Unit Kerja, serta aktivasi status akun di PINTAR.
                     </p>
                 </div>
 

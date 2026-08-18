@@ -1,12 +1,13 @@
 <?php
 
 namespace Modules\DataAkademik\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
 use App\Models\Prestasi;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class PrestasiController extends Controller
 {
@@ -18,6 +19,7 @@ class PrestasiController extends Controller
             $q = $request->search;
             $query->where(function ($sq) use ($q) {
                 $sq->where('nama_kegiatan', 'ilike', "%{$q}%")
+                   ->orWhere('penyelenggara', 'ilike', "%{$q}%")
                    ->orWhereHas('mahasiswa', function ($q2) use ($q) {
                        $q2->where('nama', 'ilike', "%{$q}%")
                           ->orWhere('nim', 'ilike', "%{$q}%");
@@ -30,22 +32,55 @@ class PrestasiController extends Controller
         if ($request->filled('tingkat')) {
             $query->where('tingkat', $request->tingkat);
         }
+        if ($request->filled('tahun')) {
+            $query->where('tahun', $request->tahun);
+        }
 
-        $prestasis = $query->paginate(15)->withQueryString();
+        $prestasis = $query->paginate(15)->through(fn($p) => [
+            'id'             => $p->id,
+            'nama_kegiatan'  => $p->nama_kegiatan,
+            'jenis_prestasi' => $p->jenis_prestasi,
+            'tingkat'        => $p->tingkat,
+            'tahun'          => $p->tahun,
+            'penyelenggara'  => $p->penyelenggara,
+            'peringkat'      => $p->peringkat,
+            'keterangan'     => $p->keterangan,
+            'sertifikat_url' => $p->sertifikat ? asset('storage/' . $p->sertifikat) : null,
+            'mahasiswa_id'   => $p->mahasiswa_id,
+            'mahasiswa_nim'  => $p->mahasiswa?->nim,
+            'mahasiswa_nama' => $p->mahasiswa?->nama,
+            'prodi_nama'     => $p->mahasiswa?->prodi?->nama,
+        ])->withQueryString();
         
         $stats = [
-            'total' => Prestasi::count(),
-            'akademik' => Prestasi::where('jenis_prestasi', 'Akademik')->count(),
+            'total'         => Prestasi::count(),
+            'akademik'      => Prestasi::where('jenis_prestasi', 'Akademik')->count(),
+            'non_akademik'  => Prestasi::where('jenis_prestasi', 'Non-Akademik')->count(),
             'internasional' => Prestasi::where('tingkat', 'Internasional')->count(),
+            'nasional'      => Prestasi::where('tingkat', 'Nasional')->count(),
         ];
 
-        return view('dataakademik::prestasi.index', compact('prestasis', 'stats'));
+        $tahunList = Prestasi::whereNotNull('tahun')->distinct()->orderBy('tahun', 'desc')->pluck('tahun');
+
+        return Inertia::render('DataAkademik/Prestasi/Index', [
+            'prestasis'      => $prestasis,
+            'stats'          => $stats,
+            'jenisOptions'   => Prestasi::JENIS_PRESTASI,
+            'tingkatOptions' => Prestasi::TINGKAT,
+            'tahunList'      => $tahunList,
+            'filters'        => $request->only(['search', 'jenis_prestasi', 'tingkat', 'tahun']),
+        ]);
     }
 
     public function create()
     {
-        $mahasiswas = Mahasiswa::orderBy('nama')->get();
-        return view('dataakademik::prestasi.create', compact('mahasiswas'));
+        $mahasiswas = Mahasiswa::orderBy('nama')->get(['id', 'nim', 'nama', 'prodi_id']);
+        
+        return Inertia::render('DataAkademik/Prestasi/Create', [
+            'mahasiswas'     => $mahasiswas,
+            'jenisOptions'   => Prestasi::JENIS_PRESTASI,
+            'tingkatOptions' => Prestasi::TINGKAT,
+        ]);
     }
 
     public function store(Request $request)
@@ -73,8 +108,25 @@ class PrestasiController extends Controller
 
     public function edit(Prestasi $prestasi)
     {
-        $mahasiswas = Mahasiswa::orderBy('nama')->get();
-        return view('dataakademik::prestasi.edit', compact('prestasi', 'mahasiswas'));
+        $mahasiswas = Mahasiswa::orderBy('nama')->get(['id', 'nim', 'nama', 'prodi_id']);
+
+        return Inertia::render('DataAkademik/Prestasi/Edit', [
+            'prestasi' => [
+                'id'             => $prestasi->id,
+                'mahasiswa_id'   => $prestasi->mahasiswa_id,
+                'nama_kegiatan'  => $prestasi->nama_kegiatan,
+                'jenis_prestasi' => $prestasi->jenis_prestasi,
+                'tingkat'        => $prestasi->tingkat,
+                'tahun'          => $prestasi->tahun,
+                'penyelenggara'  => $prestasi->penyelenggara,
+                'peringkat'      => $prestasi->peringkat,
+                'keterangan'     => $prestasi->keterangan,
+                'sertifikat_url' => $prestasi->sertifikat ? asset('storage/' . $prestasi->sertifikat) : null,
+            ],
+            'mahasiswas'     => $mahasiswas,
+            'jenisOptions'   => Prestasi::JENIS_PRESTASI,
+            'tingkatOptions' => Prestasi::TINGKAT,
+        ]);
     }
 
     public function update(Request $request, Prestasi $prestasi)
@@ -112,3 +164,4 @@ class PrestasiController extends Controller
         return redirect()->route('prestasi.index')->with('success', 'Data Prestasi Mahasiswa berhasil dihapus.');
     }
 }
+

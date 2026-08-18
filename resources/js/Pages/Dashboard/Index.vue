@@ -17,6 +17,7 @@ const props = defineProps({
     standarProgress: Array,
     ppeppStatus: Object,
     ppeppDetails: Object,
+    executiveSummary: Object,
 });
 
 const activeTab = ref('audit');
@@ -111,7 +112,17 @@ const ppeppSteps = computed(() => [
                     </p>
                 </div>
 
-                <div class="relative z-10 flex items-center gap-3 shrink-0">
+                <div class="relative z-10 flex items-center gap-2.5 shrink-0 flex-wrap">
+                    <a
+                        href="/cetak/rekap-akreditasi"
+                        target="_blank"
+                        class="px-3.5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center gap-2 shadow-xs"
+                        title="Cetak Rekapitulasi Data Kuantitatif Akreditasi"
+                    >
+                        <i class="bi bi-printer-fill"></i>
+                        <span>Cetak LKPT</span>
+                    </a>
+
                     <button
                         @click="periodeModalOpen = true"
                         class="px-4 py-2.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold border border-white/20 transition flex items-center gap-2 cursor-pointer shadow-xs"
@@ -194,6 +205,87 @@ const ppeppSteps = computed(() => [
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Executive Unified 10-Module Cross-Domain Snapshot -->
+            <div v-if="executiveSummary" class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+                <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-xs">
+                            <i class="bi bi-grid-1x2-fill"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm sm:text-base font-black text-slate-900">Ringkasan Eksekutif Terpadu 10 Modul</h2>
+                            <p class="text-[11px] text-slate-400">Snapshot data strategis pimpinan Politeknik secara terintegrasi</p>
+                        </div>
+                    </div>
+                    <Link href="/portal" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 transition">
+                        <span>Buka Portal Modul</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </Link>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+                    <!-- 1. SDM -->
+                    <Link href="/sdm" class="p-3.5 rounded-2xl bg-purple-50/50 hover:bg-purple-50 border border-purple-100 transition group block">
+                        <div class="flex items-center justify-between text-purple-700 mb-1.5">
+                            <i class="bi bi-person-vcard text-lg"></i>
+                            <span class="text-[9px] font-extrabold uppercase tracking-wider">SDM Dosen</span>
+                        </div>
+                        <div class="text-xl font-black text-slate-900 group-hover:text-purple-700 transition">{{ executiveSummary.sdm?.total_dosen || 0 }}</div>
+                        <div class="text-[10px] font-semibold text-slate-500 mt-0.5">{{ executiveSummary.sdm?.dosen_s3 || 0 }} Dosen S3 · {{ executiveSummary.sdm?.total_pegawai || 0 }} Pegawai</div>
+                    </Link>
+
+                    <!-- 2. Data Akademik -->
+                    <Link href="/mahasiswa" class="p-3.5 rounded-2xl bg-sky-50/50 hover:bg-sky-50 border border-sky-100 transition group block">
+                        <div class="flex items-center justify-between text-sky-700 mb-1.5">
+                            <i class="bi bi-mortarboard text-lg"></i>
+                            <span class="text-[9px] font-extrabold uppercase tracking-wider">Mahasiswa</span>
+                        </div>
+                        <div class="text-xl font-black text-slate-900 group-hover:text-sky-700 transition">{{ executiveSummary.akademik?.mhs_aktif || 0 }}</div>
+                        <div class="text-[10px] font-semibold text-slate-500 mt-0.5">IPK Rerata {{ executiveSummary.akademik?.avg_ipk || '0.00' }} · {{ executiveSummary.akademik?.total_prestasi || 0 }} Prestasi</div>
+                    </Link>
+
+                    <!-- 3. Tridharma -->
+                    <Link href="/penelitian" class="p-3.5 rounded-2xl bg-rose-50/50 hover:bg-rose-50 border border-rose-100 transition group block">
+                        <div class="flex items-center justify-between text-rose-700 mb-1.5">
+                            <i class="bi bi-journal-bookmark text-lg"></i>
+                            <span class="text-[9px] font-extrabold uppercase tracking-wider">Tridharma</span>
+                        </div>
+                        <div class="text-xl font-black text-slate-900 group-hover:text-rose-700 transition">{{ (executiveSummary.tridharma?.penelitian || 0) + (executiveSummary.tridharma?.pengabdian || 0) }}</div>
+                        <div class="text-[10px] font-semibold text-slate-500 mt-0.5">{{ executiveSummary.tridharma?.publikasi || 0 }} Jurnal · {{ executiveSummary.tridharma?.hki || 0 }} HKI/Paten</div>
+                    </Link>
+
+                    <!-- 4. Tracer Study -->
+                    <Link href="/tracer-study" class="p-3.5 rounded-2xl bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-100 transition group block">
+                        <div class="flex items-center justify-between text-emerald-700 mb-1.5">
+                            <i class="bi bi-person-check text-lg"></i>
+                            <span class="text-[9px] font-extrabold uppercase tracking-wider">Tracer Study</span>
+                        </div>
+                        <div class="text-xl font-black text-slate-900 group-hover:text-emerald-700 transition">{{ executiveSummary.tracer?.bekerja_persen || 0 }}%</div>
+                        <div class="text-[10px] font-semibold text-slate-500 mt-0.5">{{ executiveSummary.tracer?.total_alumni || 0 }} Responden · {{ executiveSummary.tracer?.avg_tunggu || 0 }} Bln Tunggu</div>
+                    </Link>
+
+                    <!-- 5. Sarpras & Rapat -->
+                    <Link href="/aset" class="p-3.5 rounded-2xl bg-teal-50/50 hover:bg-teal-50 border border-teal-100 transition group block">
+                        <div class="flex items-center justify-between text-teal-700 mb-1.5">
+                            <i class="bi bi-building text-lg"></i>
+                            <span class="text-[9px] font-extrabold uppercase tracking-wider">Sarpras & Rapat</span>
+                        </div>
+                        <div class="text-xl font-black text-slate-900 group-hover:text-teal-700 transition">{{ executiveSummary.sarpras?.total_aset || 0 }}</div>
+                        <div class="text-[10px] font-semibold text-slate-500 mt-0.5">{{ executiveSummary.sarpras?.rapat_selesai || 0 }} Rapat Selesai / Arsip</div>
+                    </Link>
+
+                    <!-- 6. Persuratan & Kerjasama -->
+                    <Link href="/manajemen-surat" class="p-3.5 rounded-2xl bg-amber-50/50 hover:bg-amber-50 border border-amber-100 transition group block">
+                        <div class="flex items-center justify-between text-amber-700 mb-1.5">
+                            <i class="bi bi-envelope-paper text-lg"></i>
+                            <span class="text-[9px] font-extrabold uppercase tracking-wider">Surat & Mitra</span>
+                        </div>
+                        <div class="text-xl font-black text-slate-900 group-hover:text-amber-700 transition">{{ executiveSummary.persuratan?.surat_masuk || 0 }}</div>
+                        <div class="text-[10px] font-semibold text-slate-500 mt-0.5">{{ executiveSummary.persuratan?.disposisi || 0 }} Disposisi · {{ executiveSummary.kerjasama?.mitra_aktif || 0 }} Mitra</div>
+                    </Link>
                 </div>
             </div>
 

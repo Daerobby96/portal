@@ -309,13 +309,7 @@
                                 <i class="bi bi-file-earmark-bar-graph"></i><span>Laporan</span>
                             </a>
                         </li>
-                        @if(!auth()->user()->isSuperAdmin())
-                        <li class="sidebar-item {{ request()->routeIs('user-kuesioner.*') ? 'active' : '' }}">
-                            <a href="{{ route('user-kuesioner.index') }}" class="sidebar-link">
-                                <i class="bi bi-clipboard2-data"></i><span>Survei &amp; Kuesioner</span>
-                            </a>
-                        </li>
-                        @endif
+
                         @if(auth()->user()->isSuperAdmin() || auth()->user()->isPimpinan() || auth()->user()->canManageAudit())
                         <li class="sidebar-item {{ request()->routeIs('kuesioner.*') ? 'active' : '' }}">
                             <a href="{{ route('kuesioner.index') }}" class="sidebar-link">

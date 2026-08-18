@@ -243,22 +243,74 @@
         </div>
     </div>
 
-    {{-- Card Laporan Tren Multi-Periode --}}
+    {{-- Section Khusus: Dokumen Resmi Institusi SPMI (Siap Cetak PDF / A4) --}}
+    <div class="col-12 mt-2">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <div>
+                <h5 class="font-extrabold text-slate-800 mb-0">Dokumen Resmi Institusi POLKA (A4)</h5>
+                <p class="text-slate-400 text-xs mb-0">Format laporan resmi standar institusi lengkap dengan cover, bab, matriks temuan, dan lembar pengesahan.</p>
+            </div>
+            <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full font-bold text-xs">
+                <i class="bi bi-shield-check me-1"></i>Standar SPMI POLKA
+            </span>
+        </div>
+    </div>
+
+    {{-- Card 1: Laporan AMI --}}
     <div class="col-md-4">
-        <div class="card border-0 rounded-2xl bg-gradient-to-br from-[#1e1b4b] to-[#311042] text-white shadow-lg h-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
-            <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-indigo-500/20 blur-3xl transition-all duration-1000 group-hover:scale-150"></div>
-            <div class="card-body text-center p-4 relative z-10 d-flex flex-column justify-content-between h-100">
+        <div class="card border-0 rounded-2xl bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] h-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-t-4 border-t-emerald-500">
+            <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
                 <div>
-                    <div class="d-inline-flex align-items-center justify-content-center p-3.5 rounded-2xl bg-indigo-500/20 text-indigo-300 mb-3.5 border border-indigo-500/30">
-                        <i class="bi bi-bar-chart-steps fs-3"></i>
+                    <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-2xl bg-emerald-50 text-emerald-600 mb-3">
+                        <i class="bi bi-clipboard2-check-fill fs-4"></i>
                     </div>
-                    <h6 class="font-bold text-white mb-2">Laporan Tren Multi-Periode</h6>
-                    <p class="text-slate-300 text-xs mb-4">
-                        Analisis tren capaian indikator (IKU/IKT) dari waktu ke waktu untuk keperluan akreditasi (LKPT/LED).
+                    <h6 class="font-bold text-slate-900 mb-1.5">Laporan AMI (Audit Mutu Internal)</h6>
+                    <p class="text-slate-500 text-xs mb-3">
+                        Laporan komprehensif 11 bagian: Identitas, 19 Unit, Dasar Hukum, Jadwal, Matriks 31 Standar Temuan, dan Rekomendasi.
                     </p>
                 </div>
-                <a href="{{ route('laporan.tren') }}" class="btn text-white rounded-xl text-xs font-bold w-100 py-2.5 border-0 shadow-lg shadow-indigo-600/35" style="background-color: #6366f1;">
-                    <i class="bi bi-graph-up me-1.5"></i>Lihat Analisis Tren
+                <a href="{{ route('cetak.berita-acara-ami', 1) }}" target="_blank" class="btn btn-emerald rounded-xl text-xs font-bold w-100 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm border-0">
+                    <i class="bi bi-file-earmark-pdf-fill me-1.5"></i>Cetak Laporan AMI (A4)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Card 2: Laporan RTL --}}
+    <div class="col-md-4">
+        <div class="card border-0 rounded-2xl bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] h-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-t-4 border-t-teal-500">
+            <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
+                <div>
+                    <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-2xl bg-teal-50 text-teal-600 mb-3">
+                        <i class="bi bi-arrow-repeat fs-4"></i>
+                    </div>
+                    <h6 class="font-bold text-slate-900 mb-1.5">Laporan RTL (Rencana Tindak Lanjut)</h6>
+                    <p class="text-slate-500 text-xs mb-3">
+                        Rencana tindakan koreksi atas hasil temuan AMI untuk 31 Standar Mutu (Pendidikan, Penelitian, PkM, dan Standar Tambahan).
+                    </p>
+                </div>
+                <a href="{{ route('cetak.laporan-rtl') }}" target="_blank" class="btn btn-teal rounded-xl text-xs font-bold w-100 py-2.5 bg-teal-600 text-white hover:bg-teal-700 shadow-sm border-0">
+                    <i class="bi bi-file-earmark-pdf-fill me-1.5"></i>Cetak Laporan RTL (A4)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Card 3: Laporan RTM --}}
+    <div class="col-md-4">
+        <div class="card border-0 rounded-2xl bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] h-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-t-4 border-t-indigo-500">
+            <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
+                <div>
+                    <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-2xl bg-indigo-50 text-indigo-600 mb-3">
+                        <i class="bi bi-people-fill fs-4"></i>
+                    </div>
+                    <h6 class="font-bold text-slate-900 mb-1.5">Laporan RTM (Tinjauan Manajemen)</h6>
+                    <p class="text-slate-500 text-xs mb-3">
+                        Risalah kebijakan mutu tertinggi institusi: Redistribusi tanggung jawab tindak lanjut, strategi deploymen, dan keputusan direksi.
+                    </p>
+                </div>
+                <a href="{{ route('cetak.laporan-rtm') }}" target="_blank" class="btn btn-indigo rounded-xl text-xs font-bold w-100 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm border-0">
+                    <i class="bi bi-file-earmark-pdf-fill me-1.5"></i>Cetak Laporan RTM (A4)
                 </a>
             </div>
         </div>

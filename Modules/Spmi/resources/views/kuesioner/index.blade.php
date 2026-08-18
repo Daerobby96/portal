@@ -6,16 +6,19 @@
 @section('page-subtitle', 'Kelola survei kepuasan dan evaluasi diri institusi.')
 
 @section('page-actions')
-    @if(auth()->user()->isSuperAdmin())
     <div class="d-flex gap-2">
+        <a href="{{ route('user-kuesioner.index') }}" target="_blank" class="btn btn-outline-secondary rounded-xl text-xs font-bold px-3 border-slate-200 hover:border-indigo-600">
+            <i class="bi bi-box-arrow-up-right me-1.5 text-indigo-600"></i>Buka Survei Publik
+        </a>
+        @if(auth()->user()->isSuperAdmin())
         <button type="button" class="btn btn-outline-primary rounded-xl text-xs font-bold px-3 border-slate-200 hover:border-primary" data-bs-toggle="modal" data-bs-target="#importSiakadModal">
             <i class="bi bi-cloud-arrow-up me-1.5 text-success"></i>Import dari Siakad
         </button>
         <a href="{{ route('kuesioner.create') }}" class="btn btn-primary rounded-xl text-xs font-bold px-3 shadow-sm">
             <i class="bi bi-plus-lg me-1.5"></i>Buat Kuesioner Baru
         </a>
+        @endif
     </div>
-    @endif
 @endsection
 
 @section('content')

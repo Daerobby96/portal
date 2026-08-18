@@ -51,7 +51,7 @@ const submit = () => {
                     </div>
                     <div>
                         <span class="text-xl font-extrabold text-white tracking-tight block">
-                            {{ appSettings?.appName || 'ERP-POLKA' }}
+                            {{ appSettings?.appName || 'PINTAR' }}
                         </span>
                         <span class="text-[11px] font-semibold tracking-wider text-indigo-300 uppercase">
                             Pusat Penjaminan Mutu & Tata Kelola
@@ -118,7 +118,7 @@ const submit = () => {
                     <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-white text-xl font-bold mb-2 shadow-lg shadow-indigo-500/30">
                         <i class="bi bi-shield-check"></i>
                     </div>
-                    <h2 class="text-xl font-extrabold text-white">{{ appSettings?.appName || 'ERP-POLKA' }}</h2>
+                    <h2 class="text-xl font-extrabold text-white">{{ appSettings?.appName || 'PINTAR' }}</h2>
                     <p class="text-xs text-slate-400">Pusat Penjaminan Mutu & Tata Kelola</p>
                 </div>
 

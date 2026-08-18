@@ -105,18 +105,19 @@ class MonitoringController extends Controller
                                     }
                                 }, 'monitorings.evaluasi', 'standar'])
                                 ->orderBy('standars.kode')
+                                ->orderByRaw("CASE WHEN indikator_kinerjas.tipe = 'IKU' THEN 1 WHEN indikator_kinerjas.tipe = 'IKT' THEN 2 ELSE 3 END")
                                 ->orderBy('indikator_kinerjas.kode');
 
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
-                $q->where('nama', 'like', '%' . $request->search . '%')
-                  ->orWhere('kode', 'like', '%' . $request->search . '%');
+                $q->where('indikator_kinerjas.nama', 'like', '%' . $request->search . '%')
+                  ->orWhere('indikator_kinerjas.kode', 'like', '%' . $request->search . '%');
             });
         }
 
         // Auditee hanya lihat data unit-nya
         if (auth()->user()->isAuditee()) {
-            $query->where('unit_kerja', auth()->user()->unit_kerja);
+            $query->where('indikator_kinerjas.unit_kerja', auth()->user()->unit_kerja);
         }
 
         $indikators = $query->get();
@@ -144,7 +145,14 @@ class MonitoringController extends Controller
 
     public function create()
     {
-        $indikators = IndikatorKinerja::where('is_aktif', true)->orderBy('nama')->get();
+        $indikators = IndikatorKinerja::leftJoin('standars', 'indikator_kinerjas.standar_id', '=', 'standars.id')
+            ->select('indikator_kinerjas.*')
+            ->where('indikator_kinerjas.is_aktif', true)
+            ->with('standar')
+            ->orderBy('standars.kode')
+            ->orderByRaw("CASE WHEN indikator_kinerjas.tipe = 'IKU' THEN 1 WHEN indikator_kinerjas.tipe = 'IKT' THEN 2 ELSE 3 END")
+            ->orderBy('indikator_kinerjas.kode')
+            ->get();
         $periodes   = Periode::orderByDesc('tahun')->get();
         return \Inertia\Inertia::render('Spmi/Monitoring/Create', [
             'indikators' => $indikators,
@@ -253,16 +261,22 @@ class MonitoringController extends Controller
             return response()->json(['success' => false, 'message' => 'Nilai harus angka.'], 422);
         }
 
+        $dataUpdate = [
+            'pelapor_id'    => Auth::id() ?? 1,
+            'tanggal_input' => now(),
+            $field          => $value,
+        ];
+
+        if ($field === 'nilai_capaian') {
+            $dataUpdate['status'] = 'submitted';
+        }
+
         $monitoring = Monitoring::updateOrCreate(
             [
                 'indikator_id' => $request->indikator_id,
                 'periode_id'   => $request->periode_id,
             ],
-            [
-                'pelapor_id'    => Auth::id(),
-                'tanggal_input' => now(), // Default if creating
-                $field          => $value,
-            ]
+            $dataUpdate
         );
 
         return response()->json([
